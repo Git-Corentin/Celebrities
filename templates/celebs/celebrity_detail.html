@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{% url 'celebrity_list' %}" class="back-button">← Retour à la liste</a>
+<div class="container">
+  <h2>{{ celebrity.name }}</h2>
+
+  <!-- Affichage de l'image de la célébrité -->
+  {% if celebrity.image %}
+    <div class="celeb-image-container">
+      <img src="{{ celebrity.image.url }}" alt="{{ celebrity.name }}" class="celeb-image">
+    </div>
+  {% endif %}
+
+  <p><strong>Popularité :</strong> {{ celebrity.popularity_score }}</p>
+
+    <form method="post" action="{% url 'update_popularity' celebrity.id %}" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn">🔄 Mettre à jour la popularité</button>
+    </form>
+  <p><strong>Activités :</strong>
+    {% for activity in celebrity.activities.all %}
+      <span class="tag">{{ activity.name }}</span>
+    {% empty %}
+      <span class="tag">Aucune</span>
+    {% endfor %}
+  </p>
+
+  <h3>Apparitions :</h3>
+  <table class="celebrity-table">
+    <thead>
+      <tr>
+        <th>Date vue</th>
+        <th>Lieu</th>
+        <th>Notes</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sighting in celebrity.sightings.all %}
+        <tr>
+          <td>{{ sighting.date_seen|date:"d/m/Y"|default:"-" }}</td>
+          <td>{{ sighting.location|default:"-" }}</td>
+          <td>{{ sighting.notes|default:"Aucune note" }}</td>
+          <td>
+            <a href="{% url 'edit_celebrity_sighting' sighting.id %}" class="btn edit-btn">✏️ Éditer</a>
+            <form method="post" action="{% url 'delete_celebrity_sighting' sighting.id %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="delete-btn" onclick="return confirm('Supprimer cette apparition ?');">
+                🗑 Supprimer
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Formulaire de suppression de la célébrité -->
+  <form method="post" action="{% url 'celebrity_delete' celebrity.id %}" style="margin-top: 20px;">
+    {% csrf_token %}
+    <a href="{% url 'celebrity_edit' celebrity.id %}" class="btn">✏️ Modifier la célébrité</a>
+    <button type="submit" class="delete-button" onclick="return confirm('Supprimer cette célébrité ?');">
+      🗑 Supprimer la célébrité
+    </button>
+  </form>
+</div>
+{% endblock %}

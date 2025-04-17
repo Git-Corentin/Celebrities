@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h2>Ajouter une célébrité</h2>
+
+  <form id="celebrity-form" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div id="celebrity-message" class="message">Cherchez une célébrité</div>
+
+    <div class="form-group">
+      <label for="id_name">Nom de la célébrité :</label>
+      {{ form.name }}
+    </div>
+
+    <div id="celebrity-details" style="display: none;">
+      <div class="form-group">
+        <label for="id_image">Importer une image :</label>
+        {{ form.image }}
+        <!-- Conteneur pour la prévisualisation de l'image sélectionnée -->
+        <div id="image-preview-container" class="image-preview-container"></div>
+      </div>
+
+      <!-- Champ de recherche des activités -->
+      <div class="form-group">
+        <label for="activity-search">Activités :</label>
+        <input type="text" id="activity-search" placeholder="Recherchez une activité...">
+        <ul id="activity-suggestions"></ul>
+      </div>
+
+      <!-- Liste des activités sélectionnées -->
+      <div id="selected-activities"></div>
+
+      <!-- Champ caché qui enverra les activités sélectionnées -->
+      <input type="hidden" name="activities" id="activities-input">
+    </div>
+
+    <div id="sighting-details" style="display: none;">
+      <h3>Détails de l'observation</h3>
+      <div class="form-group">
+        <label for="id_date_seen">Date vue :</label>
+        {{ sighting_form.date_seen }}
+      </div>
+      <div class="form-group">
+        <label for="id_location">Lieu :</label>
+        {{ sighting_form.location }}
+      </div>
+      <div class="form-group">
+        <label for="id_notes">Notes :</label>
+        {{ sighting_form.notes }}
+      </div>
+    </div>
+
+    <button type="submit">Ajouter</button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const nameInput = document.getElementById("id_name");
+      const celebrityDetails = document.getElementById("celebrity-details");
+      const sightingDetails = document.getElementById("sighting-details");
+      const celebrityMessage = document.getElementById("celebrity-message");
+      const searchInput = document.getElementById("activity-search");
+      const suggestionsList = document.getElementById("activity-suggestions");
+      const selectedActivitiesDiv = document.getElementById("selected-activities");
+      const activitiesInput = document.getElementById("activities-input");
+      let selectedActivities = [];
+
+      nameInput.addEventListener("input", function () {
+          const name = nameInput.value.trim();
+          if (name) {
+              fetch(`{% url 'check_celebrity_exists' %}?name=${encodeURIComponent(name)}`)
+                  .then(response => response.json())
+                  .then(data => {
+                      if (data.exists) {
+                          celebrityDetails.style.display = 'none';
+                          sightingDetails.style.display = 'block';
+                          celebrityMessage.innerHTML = `C'est la ${data.count + 1}ème fois que vous voyez ${name} !`;
+                          document.getElementById('celebrity-form').setAttribute('data-celebrity-id', data.celebrity_id);
+                      } else {
+                          celebrityDetails.style.display = 'block';
+                          sightingDetails.style.display = 'block';
+                          celebrityMessage.innerHTML = `Il semble s'agir d'une nouvelle personne, veuillez remplir tous les champs !`;
+                          document.getElementById('celebrity-form').removeAttribute('data-celebrity-id');
+                      }
+                  });
+          } else {
+              celebrityDetails.style.display = 'none';
+              sightingDetails.style.display = 'none';
+              celebrityMessage.innerHTML = 'Cherchez une célébrité';
+          }
+      });
+
+      function fetchActivities(query = "") {
+          fetch("{% url 'search_activities' %}?q=" + encodeURIComponent(query))
+              .then(response => response.json())
+              .then(data => {
+                  suggestionsList.innerHTML = "";
+                  data.activities.forEach(activity => {
+                      if (!selectedActivities.includes(activity)) {
+                          let li = document.createElement("li");
+                          li.textContent = activity;
+                          li.onclick = function () {
+                              if (!selectedActivities.includes(activity)) {
+                                  selectedActivities.push(activity);
+                                  updateSelectedActivities();
+                              }
+                              searchInput.value = "";
+                              suggestionsList.innerHTML = "";
+                          };
+                          suggestionsList.appendChild(li);
+                      }
+                  });
+              });
+      }
+
+      searchInput.addEventListener("input", function () {
+          fetchActivities(searchInput.value.trim());
+      });
+
+      searchInput.addEventListener("focus", function () {
+          fetchActivities("");
+      });
+
+      document.addEventListener("click", function (e) {
+          if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+              suggestionsList.innerHTML = "";
+          }
+      });
+
+      function updateSelectedActivities() {
+          selectedActivitiesDiv.innerHTML = "";
+          selectedActivities.forEach(activity => {
+              let span = document.createElement("span");
+              span.textContent = activity;
+              span.classList.add("activity-tag");
+
+              let removeBtn = document.createElement("button");
+              removeBtn.textContent = "❌";
+              removeBtn.onclick = function () {
+                  selectedActivities = selectedActivities.filter(a => a !== activity);
+                  updateSelectedActivities();
+              };
+
+              span.appendChild(removeBtn);
+              selectedActivitiesDiv.appendChild(span);
+          });
+
+          activitiesInput.value = selectedActivities.join(",");
+      }
+
+      // Ajout de la fonctionnalité de prévisualisation de l'image
+      const imageInput = document.getElementById("id_image");
+      const imagePreviewContainer = document.getElementById("image-preview-container");
+
+      imageInput.addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (file && file.type.startsWith("image/")) {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                  imagePreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Prévisualisation de l'image" class="celeb-image">`;
+              };
+              reader.readAsDataURL(file);
+          } else {
+              imagePreviewContainer.innerHTML = "";
+          }
+      });
+  });
+</script>
+{% endblock %}

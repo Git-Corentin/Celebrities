@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{% url 'celebrity_detail' celebrity.id %}" class="back-button">← Retour au détail</a>
+<div class="container">
+  <h2 class="title">Modifier la page de {{ celebrity.name }}</h2>
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="id_name">Nom</label>
+      {{ form.name }}
+    </div>
+
+    <!-- Affichage de l'image actuelle de la célébrité -->
+    {% if celebrity.image %}
+      <div class="form-group">
+        <label>Image actuelle :</label>
+        <img src="{{ celebrity.image.url }}" alt="{{ celebrity.name }}" class="celeb-image">
+      </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label for="id_image">Importer une nouvelle image</label>
+      {{ form.image }}
+      <!-- Conteneur pour la prévisualisation de l'image sélectionnée -->
+      <div id="image-preview-container" class="image-preview-container"></div>
+    </div>
+
+    <!-- Champ de recherche des activités -->
+    <div class="form-group">
+      <label for="activity-search">Activités</label>
+      <input type="text" id="activity-search" placeholder="Recherchez une activité..." value="{{ form.activities.value|default_if_none:'' }}">
+      <ul id="activity-suggestions"></ul>
+    </div>
+
+    <!-- Liste des activités sélectionnées -->
+    <div id="selected-activities"></div>
+
+    <!-- Champ caché qui enverra les activités sélectionnées -->
+    <input type="hidden" name="activities" id="activities-input" value="{{ form.activities.value|default_if_none:'' }}">
+
+    <button type="submit" class="btn">Enregistrer les modifications</button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const searchInput = document.getElementById("activity-search");
+      const suggestionsList = document.getElementById("activity-suggestions");
+      const selectedActivitiesDiv = document.getElementById("selected-activities");
+      const activitiesInput = document.getElementById("activities-input");
+      let selectedActivities = activitiesInput.value.split(',').filter(activity => activity.trim() !== "");
+
+      function fetchActivities(query = "") {
+          fetch("{% url 'search_activities' %}?q=" + encodeURIComponent(query))
+              .then(response => response.json())
+              .then(data => {
+                  suggestionsList.innerHTML = "";
+                  data.activities.forEach(activity => {
+                      if (!selectedActivities.includes(activity)) {
+                          let li = document.createElement("li");
+                          li.textContent = activity;
+                          li.onclick = function () {
+                              if (!selectedActivities.includes(activity)) {
+                                  selectedActivities.push(activity);
+                                  updateSelectedActivities();
+                              }
+                              searchInput.value = "";
+                              suggestionsList.innerHTML = "";
+                          };
+                          suggestionsList.appendChild(li);
+                      }
+                  });
+              });
+      }
+
+      searchInput.addEventListener("input", function () {
+          fetchActivities(searchInput.value.trim());
+      });
+
+      searchInput.addEventListener("focus", function () {
+          fetchActivities("");
+      });
+
+      document.addEventListener("click", function (e) {
+          if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+              suggestionsList.innerHTML = "";
+          }
+      });
+
+      function updateSelectedActivities() {
+          selectedActivitiesDiv.innerHTML = "";
+          selectedActivities.forEach(activity => {
+              let span = document.createElement("span");
+              span.textContent = activity;
+              span.classList.add("activity-tag");
+
+              let removeBtn = document.createElement("button");
+              removeBtn.textContent = "❌";
+              removeBtn.onclick = function () {
+                  selectedActivities = selectedActivities.filter(a => a !== activity);
+                  updateSelectedActivities();
+              };
+
+              span.appendChild(removeBtn);
+              selectedActivitiesDiv.appendChild(span);
+          });
+
+          activitiesInput.value = selectedActivities.join(",");
+      }
+
+      updateSelectedActivities();
+
+      // Ajout de la fonctionnalité de prévisualisation de l'image
+      const imageInput = document.getElementById("id_image");
+      const imagePreviewContainer = document.getElementById("image-preview-container");
+
+      imageInput.addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (file && file.type.startsWith("image/")) {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                  imagePreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Prévisualisation de l'image" class="celeb-image">`;
+              };
+              reader.readAsDataURL(file);
+          } else {
+              imagePreviewContainer.innerHTML = "";
+          }
+      });
+  });
+</script>
+{% endblock %}

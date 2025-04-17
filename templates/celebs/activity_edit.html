@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{% url 'activity_list' %}" class="back-button">← Retour à la liste des activités</a>
+<div class="container">
+  <h2>Modifier l'activité : {{ activity.name }}</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Enregistrer les modifications</button>
+  </form>
+</div>
+{% endblock %}

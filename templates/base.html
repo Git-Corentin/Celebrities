@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire de Célébrités</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <ul class="nav-list">
+                <li><a href="{% url 'celebrity_list' %}">Liste des Célébrités</a></li>
+                <li><a href="{% url 'add_celebrity' %}">Ajouter une Célébrité</a></li>
+                <li><a href="{% url 'activity_list' %}">Gérer les Activités</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+</body>
+<footer>
+        <p>&copy; 2025 Gestionnaire de Célébrités. Tous droits réservés.</p>
+</footer>
+</html>

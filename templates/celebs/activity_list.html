@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h2>Liste des activités</h2>
+
+  <!-- Formulaire pour ajouter une activité -->
+  <form method="POST" class="add-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Ajouter</button>
+  </form>
+
+  <!-- Liste des activités -->
+  <table class="activity-table">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for activity in activities %}
+        <tr>
+          <td>{{ activity.name }}</td>
+          <td>
+            <a href="{% url 'edit_activity' activity.id %}" class="btn edit-btn">✏️ Modifier</a>
+
+            <form method="POST" action="{% url 'delete_activity' activity.id %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="delete-btn">❌ Supprimer</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

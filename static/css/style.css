@@ -1,0 +1,417 @@
+/* Importation de Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@300;400;600&display=swap');
+
+/* Variables de couleur */
+:root {
+    --primary-color: #b03a3a;
+    --secondary-color: #007bff;
+    --background-color: #f8f9fb;
+    --text-color: #333;
+    --hover-color: #0056b3;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+}
+
+/* Style général */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Conteneur principal */
+.container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 20px var(--shadow-color);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.container:hover {
+    box-shadow: 0 6px 25px var(--shadow-color);
+}
+
+/* Titre principal */
+.title {
+    text-align: center;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 30px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: 'Poppins', sans-serif;
+    animation: slideIn 0.5s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+th, td {
+    padding: 15px;
+    border: 1px solid #e2e2e2;
+    text-align: center;
+    font-size: 16px;
+}
+
+th {
+    background-color: #4b79a1;
+    color: white;
+    font-size: 18px;
+    text-transform: uppercase;
+    cursor: pointer; /* Ajout du curseur pour indiquer que c'est cliquable */
+}
+
+th a {
+    color: white;
+    text-decoration: none;
+}
+
+th a:hover {
+    text-decoration: underline; /* Ajout d'un soulignement pour indiquer que c'est cliquable */
+}
+
+td {
+    background-color: #fafafa;
+}
+
+td a {
+    text-decoration: none;
+    color: var(--secondary-color);
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+td a:hover {
+    color: var(--hover-color);
+}
+
+/* Boutons */
+button, .btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    display: inline-block;
+    margin: 5px 0;
+}
+
+.delete-button {
+    width: auto;
+    background-color: var(--primary-color);
+}
+
+button:hover, .btn:hover {
+    background-color: var(--hover-color);
+    transform: translateY(-2px);
+}
+
+button:active, .btn:active {
+    transform: translateY(1px);
+}
+
+/* Sections de formulaire */
+.form-group {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.form-group label {
+    font-size: 16px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--border-radius);
+    border: 1px solid #ccc;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--primary-color);
+}
+
+/* Suggestions d'activités */
+#activity-suggestions {
+    list-style: none;
+    padding: 0;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    background: white;
+    width: 100%;
+    z-index: 999;
+    margin-top: 5px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+#activity-suggestions li {
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#activity-suggestions li:hover {
+    background-color: #f1f1f1;
+}
+
+/* Activités sélectionnées */
+.activity-tag {
+    display: inline-block;
+    background: var(--primary-color);
+    padding: 8px 16px;
+    margin: 5px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.activity-tag:hover {
+    background-color: #4b79a1;
+}
+
+.activity-tag button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: color 0.3s ease;
+}
+
+.activity-tag button:hover {
+    color: #d9534f;
+}
+
+/* Style des images des célébrités */
+.celeb-image {
+    width: 400px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    transition: transform 0.3s ease;
+}
+
+.celeb-image:hover {
+    transform: scale(1.1);
+}
+
+/* Liste des boutons */
+.button-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.btn:hover {
+    background-color: var(--hover-color);
+    transform: translateY(-2px);
+    color: white;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+
+    .celebrity-table th, .celebrity-table td {
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+    }
+}
+
+/* Barre de navigation */
+.navbar {
+    background-color: #333;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.nav-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-list li {
+    margin: 0 15px;
+}
+
+.nav-list li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.nav-list li a:hover {
+    background-color: #575757;
+}
+
+/* Bouton de retour */
+.back-button {
+    position: fixed;
+    top: 70px; /* Ajusté pour ne pas dépasser la barre de navigation */
+    left: 15px;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background-color 0.3s, transform 0.3s;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    z-index: 1001;
+}
+
+.back-button:hover {
+    background-color: var(--hover-color);
+    transform: translateY(-2px);
+}
+
+.back-button:active {
+    transform: translateY(1px);
+}
+
+/* Ajuster le contenu principal pour laisser de la place à la barre de navigation */
+main {
+    margin-top: 60px;
+}
+
+/* Style pour le conteneur d'image de la célébrité */
+.celeb-image-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.celeb-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.image-preview-container {
+    margin-top: 10px;
+
+}
+
+.image-preview-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+/* Footer */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 5px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    box-shadow: 0 -2px 2px var(--shadow-color);
+}
+.message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: var(--border-radius);
+    background-color: #f9f9f9;
+    color: var(--secondary-color);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+button,
+input[type="submit"],
+.btn {
+    padding: 12px 20px;
+    font-size: 16px;
+    line-height: 1.2;
+    height: 48px; /* tu peux ajuster la valeur */
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}

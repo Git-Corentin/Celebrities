@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h2 class="title">Liste des célébrités</h2>
+
+  <!-- Formulaire de filtre -->
+  <form method="get" class="filter-form" style="margin-bottom: 2rem;">
+    <label for="activity">Filtrer par activité :</label>
+    <select name="activity" id="activity">
+      <option value="">Toutes</option>
+      {% for activity in activities %}
+        <option value="{{ activity.id }}" {% if activity.id == selected_activity %}selected{% endif %}>
+          {{ activity.name }}
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filtrer</button>
+  </form>
+
+  <table class="celebrity-table">
+    <thead>
+      <tr>
+        {% for field, label in columns %}
+          <th>
+            <a href="?{% if selected_activity %}activity={{ selected_activity }}&{% endif %}sort={% if sort_by == field %}-{{ field }}{% else %}{{ field }}{% endif %}">
+              {{ label }}
+              {% if sort_by == field %}⬆{% elif sort_by == '-'|add:field %}⬇{% endif %}
+            </a>
+          </th>
+        {% endfor %}
+        <th>Date de rencontre</th>
+        <th>Lieu de rencontre</th>
+        <th>Notes</th>
+        <th class="photo-column">Photo</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for celeb in celebrities %}
+        {% with celeb.sightings.all as sightings %}
+          {% if sightings %}
+            <tr>
+              <!-- Colonnes avec rowspan -->
+              <td rowspan="{{ sightings|length }}"><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
+              <td rowspan="{{ sightings|length }}">{{ celeb.popularity_score }}</td>
+              <td rowspan="{{ sightings|length }}">
+                {% for activity in celeb.activities.all %}
+                  <span class="tag">{{ activity.name }}</span>
+                {% empty %}
+                  <span class="tag">Aucune</span>
+                {% endfor %}
+              </td>
+              <!-- Première apparition -->
+              <td>{{ sightings.0.date_seen|default:"-" }}</td>
+              <td>{{ sightings.0.location|default:"-" }}</td>
+              <td>{{ sightings.0.notes|default:"Aucune note"|linebreaksbr }}</td>
+              <td rowspan="{{ sightings|length }}">
+                {% if celeb.image %}
+                  <img src="{{ celeb.image.url }}" alt="{{ celeb.name }}" class="celeb-image">
+                {% else %}
+                  Aucune photo
+                {% endif %}
+              </td>
+            </tr>
+
+            {% for sighting in sightings|slice:"1:" %}
+              <tr>
+                <td>{{ sighting.date_seen|default:"-" }}</td>
+                <td>{{ sighting.location|default:"-" }}</td>
+                <td>{{ sighting.notes|default:"Aucune note"|linebreaksbr }}</td>
+              </tr>
+            {% endfor %}
+
+          {% else %}
+            <!-- Cas où la célébrité n'a aucune apparition -->
+            <tr>
+              <td><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
+              <td>{{ celeb.popularity_score }}</td>
+              <td>
+                {% for activity in celeb.activities.all %}
+                  <span class="tag">{{ activity.name }}</span>
+                {% empty %}
+                  <span class="tag">Aucune</span>
+                {% endfor %}
+              </td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+              <td>
+                {% if celeb.image %}
+                  <img src="{{ celeb.image.url }}" alt="{{ celeb.name }}" class="celeb-image">
+                {% else %}
+                  <img src="https://via.placeholder.com/150" alt="Image non disponible" class="celeb-image">
+                {% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
