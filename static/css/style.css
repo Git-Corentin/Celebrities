@@ -415,3 +415,41 @@ input[type="submit"],
     align-items: center;
     justify-content: center;
 }
+
+/* Ajouter une barre de défilement horizontale pour les tableaux sur les petits écrans */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        overflow-x: auto; /* Ajouter une barre de défilement horizontale */
+    }
+
+    table {
+        width: 100%;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    th, td {
+        font-size: 14px;
+        padding: 10px; /* Réduire le padding pour mieux s'adapter aux petits écrans */
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 14px; /* Réduire la taille de la police pour les boutons */
+    }
+}
+
+/* Ajuster les styles pour les écrans encore plus petits */
+@media (max-width: 480px) {
+    th, td {
+        font-size: 12px;
+        padding: 8px; /* Réduire encore plus le padding */
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 12px; /* Réduire encore plus la taille de la police pour les boutons */
+    }
+}
