@@ -24,7 +24,7 @@ body {
 
 /* Conteneur principal */
 .container {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 40px auto;
     padding: 40px;
     background: #ffffff;
@@ -233,11 +233,13 @@ button:active, .btn:active {
 
 /* Style des images des célébrités */
 .celeb-image {
-    width: 400px;
-    height: 400px;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
     object-fit: cover;
     border-radius: var(--border-radius);
     transition: transform 0.3s ease;
+    box-shadow: 0 4px 6px var(--shadow-color);
 }
 
 .celeb-image:hover {
@@ -359,16 +361,12 @@ main {
 
 /* Style pour le conteneur d'image de la célébrité */
 .celeb-image-container {
-    margin: 20px 0;
+    margin: 10px 0;
+    width: 300px;
+    height: auto;
     text-align: center;
 }
 
-.celeb-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px var(--shadow-color);
-}
 
 .image-preview-container {
     margin-top: 10px;
@@ -453,3 +451,13 @@ input[type="submit"],
         font-size: 12px; /* Réduire encore plus la taille de la police pour les boutons */
     }
 }
+
+/* Style pour la colonne des numéros de ligne */
+th:first-child, td:first-child {
+    width: 40px; /* Ajustez la largeur selon vos besoins */
+    text-align: center;
+    font-weight: bold;
+
+}
+
+

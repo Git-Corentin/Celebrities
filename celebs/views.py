@@ -5,6 +5,7 @@ from .utils import get_wikipedia_popularity
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+import unicodedata
 
 
 def add_celebrity(request):
@@ -81,11 +82,23 @@ def celebrity_edit(request, celebrity_id):
     })
 
 
+def remove_accents(text):
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', text)
+        if unicodedata.category(c) != 'Mn'
+    )
+
 def celebrity_list(request):
     celebrities = Celebrity.objects.prefetch_related('sightings', 'activities').all()
 
     sort_by = request.GET.get('sort', 'name')
     allowed_sorts = ['name', '-name', 'popularity_score', '-popularity_score', 'activities', '-activities']
+
+    # Filtre activité
+    activity_id = request.GET.get('activity')
+    activities = Activity.objects.all()
+    if activity_id:
+        celebrities = celebrities.filter(activities__id=activity_id)
 
     # Tri spécifique
     if sort_by in allowed_sorts:
@@ -93,17 +106,18 @@ def celebrity_list(request):
             reverse = sort_by.startswith('-')
             celebrities = sorted(
                 celebrities,
-                key=lambda c: c.activities.first().name if c.activities.exists() else '',
+                key=lambda c: remove_accents(c.activities.first().name) if c.activities.exists() else '',
+                reverse=reverse
+            )
+        elif 'name' in sort_by:
+            reverse = sort_by.startswith('-')
+            celebrities = sorted(
+                celebrities,
+                key=lambda c: remove_accents(c.name).lower(),
                 reverse=reverse
             )
         else:
             celebrities = celebrities.order_by(sort_by)
-
-    # Filtre activité
-    activity_id = request.GET.get('activity')
-    activities = Activity.objects.all()
-    if activity_id:
-        celebrities = celebrities.filter(activities__id=activity_id)
 
     # Colonnes affichées
     columns = [
@@ -119,6 +133,7 @@ def celebrity_list(request):
         "sort_by": sort_by,
         "columns": columns,
     })
+
 
 
 

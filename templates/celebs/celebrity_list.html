@@ -21,6 +21,7 @@
   <table class="celebrity-table">
     <thead>
       <tr>
+        <th>#</th> <!-- Nouvelle colonne pour les numéros de ligne -->
         {% for field, label in columns %}
           <th>
             <a href="?{% if selected_activity %}activity={{ selected_activity }}&{% endif %}sort={% if sort_by == field %}-{{ field }}{% else %}{{ field }}{% endif %}">
@@ -40,13 +41,14 @@
       {% for celeb in celebrities %}
         {% with celeb.sightings.all as sightings %}
           {% if sightings %}
-            <tr>
+            <tr class="table-row">
+              <td class="lines-number" rowspan="{{ sightings|length }}">{{ forloop.counter }}</td> <!-- Numéro de ligne -->
               <!-- Colonnes avec rowspan -->
               <td rowspan="{{ sightings|length }}"><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
               <td rowspan="{{ sightings|length }}">{{ celeb.popularity_score }}</td>
               <td rowspan="{{ sightings|length }}">
                 {% for activity in celeb.activities.all %}
-                  <span class="tag">{{ activity.name }}</span>
+                  <span class="tag">{{ activity.name }}</span>{% if not forloop.last %} • {% endif %}
                 {% empty %}
                   <span class="tag">Aucune</span>
                 {% endfor %}
@@ -65,7 +67,7 @@
             </tr>
 
             {% for sighting in sightings|slice:"1:" %}
-              <tr>
+              <tr class="table-row">
                 <td>{{ sighting.date_seen|default:"-" }}</td>
                 <td>{{ sighting.location|default:"-" }}</td>
                 <td>{{ sighting.notes|default:"Aucune note"|linebreaksbr }}</td>
@@ -74,7 +76,8 @@
 
           {% else %}
             <!-- Cas où la célébrité n'a aucune apparition -->
-            <tr>
+            <tr class="table-row">
+              <td>{{ forloop.counter }}</td> <!-- Numéro de ligne -->
               <td><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
               <td>{{ celeb.popularity_score }}</td>
               <td>
@@ -100,5 +103,6 @@
       {% endfor %}
     </tbody>
   </table>
+
 </div>
 {% endblock %}

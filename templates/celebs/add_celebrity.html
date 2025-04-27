@@ -19,7 +19,9 @@
         <label for="id_image">Importer une image :</label>
         {{ form.image }}
         <!-- Conteneur pour la prévisualisation de l'image sélectionnée -->
-        <div id="image-preview-container" class="image-preview-container"></div>
+          <div class="celeb-image-container">
+                <div id="image-preview-container" class="image-preview-container"></div>
+          </div>
       </div>
 
       <!-- Champ de recherche des activités -->
@@ -160,7 +162,7 @@
           if (file && file.type.startsWith("image/")) {
               const reader = new FileReader();
               reader.onload = function (e) {
-                  imagePreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Prévisualisation de l'image" class="celeb-image">`;
+                  imagePreviewContainer.innerHTML = `<img src="${e.target.result}" alt="Prévisualisation de l'image" class="celeb-image-container">`;
               };
               reader.readAsDataURL(file);
           } else {
