@@ -42,7 +42,7 @@
         {% with celeb.sightings.all as sightings %}
           {% if sightings %}
             <tr class="table-row">
-              <td class="lines-number" rowspan="{{ sightings|length }}">{{ forloop.counter }}</td> <!-- Numéro de ligne -->
+              <td class="line-number" rowspan="{{ sightings|length }}">{{ forloop.counter }}</td> <!-- Numéro de ligne -->
               <!-- Colonnes avec rowspan -->
               <td rowspan="{{ sightings|length }}"><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
               <td rowspan="{{ sightings|length }}">{{ celeb.popularity_score }}</td>
