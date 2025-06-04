@@ -453,7 +453,7 @@ input[type="submit"],
 }
 
 /* Style pour la colonne des numéros de ligne */
-th:first-child, td:first-child {
+.line-number {
     width: 40px; /* Ajustez la largeur selon vos besoins */
     text-align: center;
     font-weight: bold;
