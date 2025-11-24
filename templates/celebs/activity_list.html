@@ -16,6 +16,7 @@
     <thead>
       <tr>
         <th>Nom</th>
+        <th>Catégorie</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -23,6 +24,7 @@
       {% for activity in activities %}
         <tr>
           <td>{{ activity.name }}</td>
+          <td>{{ activity.category.name }}</td>
           <td>
             <a href="{% url 'edit_activity' activity.id %}" class="btn edit-btn">✏️ Modifier</a>
 

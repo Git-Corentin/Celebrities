@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Celebrity, CelebritySighting, Activity
+from .models import Celebrity, CelebritySighting, Activity, Category
 from .forms import CelebrityForm, CelebritySightingForm, ActivityForm
 from .utils import get_wikipedia_popularity
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 import unicodedata
+from django.core.paginator import Paginator
+from django.template.loader import render_to_string
+from django.db.models import Min
 
 
 def add_celebrity(request):
@@ -89,50 +92,75 @@ def remove_accents(text):
     )
 
 def celebrity_list(request):
-    celebrities = Celebrity.objects.prefetch_related('sightings', 'activities').all()
-
-    sort_by = request.GET.get('sort', 'name')
-    allowed_sorts = ['name', '-name', 'popularity_score', '-popularity_score', 'activities', '-activities']
-
-    # Filtre activité
-    activity_id = request.GET.get('activity')
+    categories = Category.objects.all()
     activities = Activity.objects.all()
-    if activity_id:
-        celebrities = celebrities.filter(activities__id=activity_id)
 
-    # Tri spécifique
+    selected_category = request.GET.get("category")
+    selected_activities = request.GET.getlist("activities[]")
+    sort_by = request.GET.get("sort", "name")
+
+    queryset = Celebrity.objects.all().prefetch_related("sightings", "activities")
+
+    if selected_category:
+        queryset = queryset.filter(activities__category_id=selected_category)
+
+    if selected_activities:
+        queryset = queryset.filter(activities__id__in=selected_activities)
+
+    if selected_category or selected_activities:
+        queryset = queryset.distinct()
+
+    allowed_sorts = ["name", "-name", "popularity_score", "-popularity_score", "activities", "-activities"]
+
     if sort_by in allowed_sorts:
-        if 'activities' in sort_by:
-            reverse = sort_by.startswith('-')
-            celebrities = sorted(
-                celebrities,
-                key=lambda c: remove_accents(c.activities.first().name) if c.activities.exists() else '',
-                reverse=reverse
-            )
-        elif 'name' in sort_by:
-            reverse = sort_by.startswith('-')
-            celebrities = sorted(
-                celebrities,
-                key=lambda c: remove_accents(c.name).lower(),
+        reverse = sort_by.startswith('-')
+
+        if "activities" in sort_by:
+            # Tri côté Python mais sur l'ensemble du queryset filtré
+            queryset = sorted(
+                queryset,
+                key=lambda c: remove_accents(c.activities.first().name if c.activities.exists() else "").lower(),
                 reverse=reverse
             )
         else:
-            celebrities = celebrities.order_by(sort_by)
+            queryset = queryset.order_by(sort_by)
 
-    # Colonnes affichées
-    columns = [
-        ("name", "Nom"),
-        ("popularity_score", "Popularité"),
-        ("activities", "Activités"),
-    ]
+    per_page_options = [50, 100, 150, 200, 250, 300, 1000]
+    try:
+        per_page = int(request.GET.get('per_page', 50))
+        if per_page <= 0:
+            per_page = 50
+    except (ValueError, TypeError):
+        per_page = 50
+
+    paginator = Paginator(queryset, per_page)
+    page_number = request.GET.get('page', 1)
+    celebrities = paginator.get_page(page_number)
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        list_html = render_to_string("partials/celebrity_list_items.html", {"celebrities": celebrities})
+        pagination_html = render_to_string(
+            "partials/celebrity_pagination.html",
+            {
+                "celebrities": celebrities,
+                "sort_by": sort_by,
+                "per_page": per_page,
+                "per_page_options": per_page_options
+            }
+        )
+        return JsonResponse({"items": list_html, "pagination": pagination_html})
 
     return render(request, "celebs/celebrity_list.html", {
-        "celebrities": celebrities,
+        "categories": categories,
         "activities": activities,
-        "selected_activity": int(activity_id) if activity_id else None,
+        "celebrities": celebrities,
         "sort_by": sort_by,
-        "columns": columns,
+        "per_page_options": per_page_options,
+        "current_per_page": per_page,
     })
+
+
+
 
 
 

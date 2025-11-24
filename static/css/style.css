@@ -460,4 +460,102 @@ input[type="submit"],
 
 }
 
+.activity-checkbox-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    background-color: #f9f9f9;
+}
+
+/* Style des boutons toggle */
+.activity-toggle {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    background-color: #f9f9f9;
+    color: black;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.2s ease;
+    white-space: normal; /* texte long à la ligne */
+    word-break: break-word;
+}
+
+.activity-toggle.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.activity-toggle:hover {
+    background-color: var(--hover-color);
+    color: white;
+    border-color: var(--hover-color);
+}
+
+.per-page-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.per-page-selector select {
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.per-page-selector select:hover {
+    border-color: var(--primary-color);
+}
+
+.per-page-selector select:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}
+
+/* Pagination boutons */
+nav.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+nav.pagination a,
+nav.pagination span.current {
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    border: 1px solid #ccc;
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+nav.pagination a:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+nav.pagination span.current {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    border: 1px solid var(--primary-color);
+}
+
 

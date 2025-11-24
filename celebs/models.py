@@ -1,6 +1,12 @@
 from django.db import models
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return self.name
 class Activity(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
     def save(self, *args, **kwargs):
         if not self.name.strip():  # Vérifie si le nom de l'activité est vide
@@ -26,3 +32,4 @@ class CelebritySighting(models.Model):
 
     def __str__(self):
         return f"{self.celebrity.name} seen on {self.date_seen} at {self.location}"
+

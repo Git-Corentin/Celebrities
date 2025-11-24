@@ -1,108 +1,62 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container">
-  <h2 class="title">Liste des célébrités</h2>
 
-  <!-- Formulaire de filtre -->
-  <form method="get" class="filter-form" style="margin-bottom: 2rem;">
-    <label for="activity">Filtrer par activité :</label>
-    <select name="activity" id="activity">
-      <option value="">Toutes</option>
-      {% for activity in activities %}
-        <option value="{{ activity.id }}" {% if activity.id == selected_activity %}selected{% endif %}>
-          {{ activity.name }}
-        </option>
-      {% endfor %}
-    </select>
-    <button type="submit" class="btn">Filtrer</button>
-  </form>
+  <!-- Bouton pour afficher/masquer les filtres -->
+    <button id="toggle-filters" class="btn" style="margin-bottom:1rem;">Afficher/Masquer les filtres</button>
+    
+    <!-- Formulaire de filtres caché par défaut -->
+    <div id="filters-form" class="filter-form" style="display:none; margin-bottom:2rem;">
+    
+      <!-- Filtre catégories -->
+      <div class="form-group">
+        <label>Catégorie :</label>
+        <select id="category-filter">
+          <option value="">Toutes</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    
+      <!-- Filtre multi-activités -->
+      <div class="form-group">
+        <label>Activités :</label>
+        <div class="activity-checkbox-wrapper">
+          {% for act in activities %}
+            <button type="button" class="activity-toggle" data-id="{{ act.id }}" data-category="{{ act.category.id }}">
+              {{ act.name }}
+            </button>
+          {% endfor %}
+        </div>
+        <div style="margin-top:10px;">
+          <button type="button" id="clear-activities" class="btn">Clear</button>
+          <button type="button" id="select-all-activities" class="btn">Select All</button>
+        </div>
+      </div>
+    
+    </div>
+ 
 
-  <table class="celebrity-table">
-    <thead>
-      <tr>
-        <th>#</th> <!-- Nouvelle colonne pour les numéros de ligne -->
-        {% for field, label in columns %}
-          <th>
-            <a href="?{% if selected_activity %}activity={{ selected_activity }}&{% endif %}sort={% if sort_by == field %}-{{ field }}{% else %}{{ field }}{% endif %}">
-              {{ label }}
-              {% if sort_by == field %}⬆{% elif sort_by == '-'|add:field %}⬇{% endif %}
-            </a>
-          </th>
-        {% endfor %}
-        <th>Date de rencontre</th>
-        <th>Lieu de rencontre</th>
-        <th>Notes</th>
-        <th class="photo-column">Photo</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {% for celeb in celebrities %}
-        {% with celeb.sightings.all as sightings %}
-          {% if sightings %}
-            <tr class="table-row">
-              <td class="line-number" rowspan="{{ sightings|length }}">{{ forloop.counter }}</td> <!-- Numéro de ligne -->
-              <!-- Colonnes avec rowspan -->
-              <td rowspan="{{ sightings|length }}"><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
-              <td rowspan="{{ sightings|length }}">{{ celeb.popularity_score }}</td>
-              <td rowspan="{{ sightings|length }}">
-                {% for activity in celeb.activities.all %}
-                  <span class="tag">{{ activity.name }}</span>{% if not forloop.last %} • {% endif %}
-                {% empty %}
-                  <span class="tag">Aucune</span>
-                {% endfor %}
-              </td>
-              <!-- Première apparition -->
-              <td>{{ sightings.0.date_seen|default:"-" }}</td>
-              <td>{{ sightings.0.location|default:"-" }}</td>
-              <td>{{ sightings.0.notes|default:"Aucune note"|linebreaksbr }}</td>
-              <td rowspan="{{ sightings|length }}">
-                {% if celeb.image %}
-                  <img src="{{ celeb.image.url }}" alt="{{ celeb.name }}" class="celeb-image">
-                {% else %}
-                  Aucune photo
-                {% endif %}
-              </td>
-            </tr>
-
-            {% for sighting in sightings|slice:"1:" %}
-              <tr class="table-row">
-                <td>{{ sighting.date_seen|default:"-" }}</td>
-                <td>{{ sighting.location|default:"-" }}</td>
-                <td>{{ sighting.notes|default:"Aucune note"|linebreaksbr }}</td>
-              </tr>
-            {% endfor %}
-
-          {% else %}
-            <!-- Cas où la célébrité n'a aucune apparition -->
-            <tr class="table-row">
-              <td>{{ forloop.counter }}</td> <!-- Numéro de ligne -->
-              <td><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
-              <td>{{ celeb.popularity_score }}</td>
-              <td>
-                {% for activity in celeb.activities.all %}
-                  <span class="tag">{{ activity.name }}</span>
-                {% empty %}
-                  <span class="tag">Aucune</span>
-                {% endfor %}
-              </td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>
-                {% if celeb.image %}
-                  <img src="{{ celeb.image.url }}" alt="{{ celeb.name }}" class="celeb-image">
-                {% else %}
-                  <img src="https://via.placeholder.com/150" alt="Image non disponible" class="celeb-image">
-                {% endif %}
-              </td>
-            </tr>
-          {% endif %}
-        {% endwith %}
-      {% endfor %}
-    </tbody>
-  </table>
-
+  <!-- Zone AJAX -->
+  <div id="CelebListContainer">
+    {% include "partials/celebrity_list_items.html" %}
+  </div>
+  <div id="PaginationContainer">
+    {% include "partials/celebrity_pagination.html" %}
+  </div>
 </div>
+
+<script src="{% static 'js/celebrity_filters.js' %}"></script>
+
+<script>
+  // Toggle affichage des filtres
+  document.getElementById("toggle-filters").addEventListener("click", () => {
+      const form = document.getElementById("filters-form");
+      form.style.display = (form.style.display === "none") ? "block" : "none";
+  });
+</script>
+
 {% endblock %}

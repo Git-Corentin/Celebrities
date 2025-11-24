@@ -1,0 +1,27 @@
+<div class="per-page-selector" style="margin-bottom:1rem;">
+    <label for="per-page-select">Afficher :</label>
+    <select id="per-page-select">
+        {% for n in per_page_options %}
+            <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+        {% endfor %}
+    </select>
+    lignes
+</div>
+
+<nav class="pagination">
+  {% if celebrities.has_previous %}
+    <a href="#" class="page-btn" data-page="{{ celebrities.previous_page_number }}">« Précédent</a>
+  {% endif %}
+
+  {% for num in celebrities.paginator.page_range %}
+    {% if celebrities.number == num %}
+      <span class="current">{{ num }}</span>
+    {% else %}
+      <a href="#" class="page-btn" data-page="{{ num }}">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if celebrities.has_next %}
+    <a href="#" class="page-btn" data-page="{{ celebrities.next_page_number }}">Suivant »</a>
+  {% endif %}
+</nav>

@@ -1,0 +1,97 @@
+<table class="celebrity-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>
+        <a href="#" class="sort-link" data-sort="name">Nom</a>
+      </th>
+      <th>
+        <a href="#" class="sort-link" data-sort="popularity_score">Popularité</a>
+      </th>
+      <th>
+        <a href="#" class="sort-link" data-sort="activities">Activités</a>
+      </th>
+      <th>Date de rencontre</th>
+      <th>Lieu de rencontre</th>
+      <th>Notes</th>
+      <th class="photo-column">Photo</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for celeb in celebrities %}
+      {% with sightings=celeb.sightings.all %}
+        
+        {% if sightings %}
+          <tr class="table-row">
+            <td rowspan="{{ sightings|length }}">
+              {{ forloop.counter0|add:celebrities.start_index }}
+            </td>
+
+            <!-- Nom / Popularité / Activités -->
+            <td rowspan="{{ sightings|length }}">
+              <a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a>
+            </td>
+
+            <td rowspan="{{ sightings|length }}">{{ celeb.popularity_score }}</td>
+
+            <td rowspan="{{ sightings|length }}">
+              {% for act in celeb.activities.all %}
+                <span class="tag">{{ act.name }}</span>
+                {% if not forloop.last %} • {% endif %}
+              {% empty %}
+                <span class="tag">Aucune</span>
+              {% endfor %}
+            </td>
+
+            <!-- Première apparition -->
+            <td>{{ sightings.0.date_seen|default:"-" }}</td>
+            <td>{{ sightings.0.location|default:"-" }}</td>
+            <td>{{ sightings.0.notes|default:"Aucune note"|linebreaksbr }}</td>
+
+            <td rowspan="{{ sightings|length }}">
+              {% if celeb.image %}
+                <a href="{% url 'celebrity_detail' celeb.id %}"><img src="{{ celeb.image.url }}" class="celeb-image"></a>
+              {% else %}
+                <img src="https://via.placeholder.com/150" class="celeb-image">
+              {% endif %}
+            </td>
+          </tr>
+
+          {% for s in sightings|slice:"1:" %}
+            <tr>
+              <td>{{ s.date_seen|default:"-" }}</td>
+              <td>{{ s.location|default:"-" }}</td>
+              <td>{{ s.notes|default:"Aucune note"|linebreaksbr }}</td>
+            </tr>
+          {% endfor %}
+
+        {% else %}
+          <!-- Cas sans sightings -->
+          <tr class="table-row">
+            <td>{{ forloop.counter0|add:celebrities.start_index }}</td>
+            <td><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
+            <td>{{ celeb.popularity_score }}</td>
+            <td>
+              {% for act in celeb.activities.all %}
+                <span class="tag">{{ act.name }}</span>
+                {% if not forloop.last %} • {% endif %}
+              {% empty %}
+                <span class="tag">Aucune</span>
+              {% endfor %}
+            </td>
+            <td>-</td><td>-</td><td>-</td>
+            <td>
+              {% if celeb.image %}
+                  <a href="{% url 'celebrity_detail' celeb.id %}"><img src="{{ celeb.image.url }}" class="celeb-image"></a>
+              {% else %}
+                <img src="https://via.placeholder.com/150" class="celeb-image">
+              {% endif %}
+            </td>
+          </tr>
+        {% endif %}
+
+      {% endwith %}
+    {% endfor %}
+  </tbody>
+</table>
