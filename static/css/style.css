@@ -586,3 +586,26 @@ nav.pagination span.current {
     transition: width 0.2s;
 }
 
+#CelebListContainer, #PaginationContainer {
+    transition: opacity 0.15s ease-in-out;
+}
+
+.sort-link {
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+}
+
+.sort-link:hover {
+    text-decoration: underline;
+}
+
+.sort-link.sort-asc::after {
+    content: " ▲";
+    font-size: 0.8em;
+}
+
+.sort-link.sort-desc::after {
+    content: " ▼";
+    font-size: 0.8em;
+}

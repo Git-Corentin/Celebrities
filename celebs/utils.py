@@ -12,13 +12,15 @@ def get_wikipedia_popularity(name):
     # Déterminer les périodes (mois actuel et précédent)
     today = datetime.today()
     last_month = today - timedelta(days=30)
+    second_last_month = today - timedelta(days=60)
 
     current_period = today.strftime("%Y%m01")
     last_period = last_month.strftime("%Y%m01")
+    second_last_period = second_last_month.strftime("%Y%m01")
 
     total_views = 0
 
-    for period in [last_period, current_period]:
+    for period in [second_last_period, last_period, current_period]:
         url = base_url.format(name, period, period)
         try:
             response = requests.get(url, headers=headers)

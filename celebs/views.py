@@ -115,13 +115,21 @@ def celebrity_list(request):
         reverse = sort_by.startswith('-')
 
         if "activities" in sort_by:
-            # Tri côté Python mais sur l'ensemble du queryset filtré
+            # Tri côté Python pour les activités
             queryset = sorted(
                 queryset,
                 key=lambda c: remove_accents(c.activities.first().name if c.activities.exists() else "").lower(),
                 reverse=reverse
             )
+        elif "name" in sort_by:
+            # Tri côté Python pour les noms, en enlevant les accents
+            queryset = sorted(
+                queryset,
+                key=lambda c: remove_accents(c.name).lower(),
+                reverse=reverse
+            )
         else:
+            # Tri normal pour popularity_score
             queryset = queryset.order_by(sort_by)
 
     per_page_options = [50, 100, 150, 200, 250, 300, 1000]
