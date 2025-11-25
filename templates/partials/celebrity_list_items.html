@@ -23,7 +23,7 @@
       {% with sightings=celeb.sightings.all %}
         
         {% if sightings %}
-          <tr class="table-row">
+          <tr class="table-row" data-id="{{ celeb.id }}">
             <td rowspan="{{ sightings|length }}">
               {{ forloop.counter0|add:celebrities.start_index }}
             </td>
@@ -68,7 +68,7 @@
 
         {% else %}
           <!-- Cas sans sightings -->
-          <tr class="table-row">
+          <tr class="table-row" data-id="{{ celeb.id }}">
             <td>{{ forloop.counter0|add:celebrities.start_index }}</td>
             <td><a href="{% url 'celebrity_detail' celeb.id %}">{{ celeb.name }}</a></td>
             <td>{{ celeb.popularity_score }}</td>

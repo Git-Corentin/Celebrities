@@ -51,8 +51,6 @@ def add_celebrity(request):
     })
 
 
-
-
 def celebrity_edit(request, celebrity_id):
     celebrity = get_object_or_404(Celebrity, id=celebrity_id)
 
@@ -90,6 +88,7 @@ def remove_accents(text):
         c for c in unicodedata.normalize('NFD', text)
         if unicodedata.category(c) != 'Mn'
     )
+
 
 def celebrity_list(request):
     categories = Category.objects.all()
@@ -160,11 +159,6 @@ def celebrity_list(request):
     })
 
 
-
-
-
-
-
 def celebrity_detail(request, celeb_id):
     celebrity = get_object_or_404(Celebrity, id=celeb_id)
     return render(request, "celebs/celebrity_detail.html", {"celebrity": celebrity})
@@ -223,6 +217,7 @@ def activity_edit(request, activity_id):
         "activity": activity,
     })
 
+
 def check_celebrity_exists(request):
     name = request.GET.get('name')
     if name:
@@ -231,6 +226,7 @@ def check_celebrity_exists(request):
             celebrity = Celebrity.objects.get(name__iexact=name)
             return JsonResponse({'exists': True, 'celebrity_id': celebrity.id, 'count': celebrity.sightings.count()})
     return JsonResponse({'exists': False})
+
 
 def edit_celebrity_sighting(request, sighting_id):
     sighting = get_object_or_404(CelebritySighting, id=sighting_id)
@@ -242,6 +238,7 @@ def edit_celebrity_sighting(request, sighting_id):
     else:
         form = CelebritySightingForm(instance=sighting)
     return render(request, 'celebs/edit_celebrity_sighting.html', {'form': form, 'sighting': sighting})
+
 
 @require_POST
 def delete_celebrity_sighting(request, sighting_id):
@@ -261,3 +258,35 @@ def update_popularity(request, celebrity_id):
         messages.success(request, f"Popularité mise à jour : {new_score}")
 
     return redirect("celebrity_detail", celeb_id=celebrity.id)
+
+
+@require_POST
+def update_popularity_step(request):
+    """
+    Met à jour la popularité d'une célébrité donnée par son ID.
+    Le front enverra : { celeb_id: X }
+    """
+    celeb_id = request.POST.get("celeb_id")
+
+    if not celeb_id:
+        return JsonResponse({"error": "No celeb_id provided"}, status=400)
+
+    try:
+        celeb = Celebrity.objects.get(id=celeb_id)
+    except Celebrity.DoesNotExist:
+        return JsonResponse({"error": "Celebrity not found"}, status=404)
+
+    new_score = get_wikipedia_popularity(celeb.name)
+    celeb.popularity_score = new_score
+    celeb.save()
+
+    return JsonResponse({
+        "success": True,
+        "celeb_id": celeb.id,
+        "new_score": new_score
+    })
+
+
+def all_celeb_ids(request):
+    ids = list(Celebrity.objects.values_list("id", flat=True))
+    return JsonResponse({"ids": ids})

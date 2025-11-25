@@ -9,7 +9,7 @@
     
     <!-- Formulaire de filtres caché par défaut -->
     <div id="filters-form" class="filter-form" style="display:none; margin-bottom:2rem;">
-    
+
       <!-- Filtre catégories -->
       <div class="form-group">
         <label>Catégorie :</label>
@@ -20,7 +20,7 @@
           {% endfor %}
         </select>
       </div>
-    
+
       <!-- Filtre multi-activités -->
       <div class="form-group">
         <label>Activités :</label>
@@ -36,10 +36,24 @@
           <button type="button" id="select-all-activities" class="btn">Select All</button>
         </div>
       </div>
-    
-    </div>
- 
 
+    </div>
+
+<div id="update-all-container" style="margin-bottom: 1.5rem;">
+    <button id="update-all-button" class="btn btn-warning" data-update-url="{% url 'update_popularity_step' %}">>
+        🔄 Mettre à jour toutes les popularités
+    </button>
+
+    <div id="update-progress" style="display:none; margin-top: 10px;">
+        <div class="spinner" id="update-spinner"></div>
+        <div style="margin-top: 8px;">
+            Mise à jour : <span id="progress-count">0</span> / <span id="progress-total">0</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+    </div>
+</div>
   <!-- Zone AJAX -->
   <div id="CelebListContainer">
     {% include "partials/celebrity_list_items.html" %}

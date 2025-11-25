@@ -15,5 +15,8 @@ urlpatterns = [
     path('sighting/edit/<int:sighting_id>/', views.edit_celebrity_sighting, name='edit_celebrity_sighting'),
     path('sighting/delete/<int:sighting_id>/', views.delete_celebrity_sighting, name='delete_celebrity_sighting'),
     path("celebrity/<int:celebrity_id>/update_popularity/", views.update_popularity, name="update_popularity"),
+    path("update_popularity_step/", views.update_popularity_step, name="update_popularity_step"),
+    path('api/all-celeb-ids/', views.all_celeb_ids, name='all_celeb_ids')
+
 
 ]
