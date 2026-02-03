@@ -170,11 +170,60 @@ h1 {
     z-index: 5;
 }
 
+/* Logo institution - déborde du coin bas-gauche (centre du cercle = coin de la carte) */
+.institution-logo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid var(--white);
+    box-shadow: var(--shadow-lg);
+    z-index: 10;
+    background: var(--white);
+    object-fit: cover;
+    /* Déplace le centre du cercle au coin de la carte */
+    transform: translate(-20%, 20%);
+    transition: var(--transition);
+}
+
+/* Effet au survol de la carte : le logo "pulse" légèrement */
+.project-card:hover .institution-logo {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    transform: translate(-30%, 30%) scale(1.05);
+}
+
+
+/* Badge "Projet de recherche" - collé au coin supérieur droit comme la catégorie */
+.research-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--white);
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-bottom-left-radius: var(--radius);
+    border-top-right-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.research-badge svg {
+    width: 13px;
+    height: 13px;
+}
+
 /* Cards Projets - Design Moderne */
 .project-card {
     background: var(--white);
     border-radius: var(--radius-xl);
-    overflow: hidden;
+    overflow: visible;
     transition: var(--transition);
     border: none;
     box-shadow: var(--shadow);
@@ -182,11 +231,19 @@ h1 {
     height: 100%;
 }
 
-.project-card .card-body {
-    padding-bottom: calc(var(--spacing-lg) + 1.5rem); /* espace pour le badge */
+.project-card-inner {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    height: 100%;
 }
 
-.project-card::before {
+.project-card .card-body {
+    padding-bottom: calc(var(--spacing-lg) + 1.5rem); /* espace pour le badge catégorie */
+    padding-left: calc(var(--spacing-lg) + 0.5rem); /* espace pour le logo débordant à gauche */
+}
+
+.project-card-inner::before {
     content: '';
     position: absolute;
     top: 0;
@@ -206,9 +263,9 @@ h1 {
 
 .project-card-footer {
     position: relative;
-    height: 0; /* Pas d’espace en haut, badge sera flottant en bas */
+    height: 0; /* Pas d'espace en haut, badge sera flottant en bas */
 }
-.project-card:hover::before {
+.project-card:hover .project-card-inner::before {
     transform: scaleX(1);
 }
 
@@ -230,7 +287,7 @@ h1 {
     box-shadow: var(--shadow-xl);
 }
 
-/* Permet au badge et tout le contenu d’être cliquables */
+/* Permet au badge et tout le contenu d'être cliquables */
 .card-link .project-card {
     height: 100%;
 }
@@ -339,7 +396,7 @@ h1 {
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
     border: none;
-    overflow: hidden;
+    overflow: visible;
     margin-top: var(--spacing-md);
 }
 
@@ -366,6 +423,53 @@ h1 {
 
 .project-header-content {
     flex: 1;
+}
+
+/* Info institution dans la page détail */
+.institution-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: var(--light);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--primary);
+}
+
+.institution-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: var(--shadow-sm);
+    object-fit: cover;
+}
+
+.institution-info .institution-name {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.95rem;
+}
+
+/* Badge recherche dans la page détail */
+.research-badge-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--white);
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-left: 0.75rem;
+}
+
+.research-badge-detail svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* Bouton Retour - en haut à droite */
@@ -465,6 +569,73 @@ h1 {
     margin: var(--spacing-md) 0;
 }
 
+/* ============================================
+   GALERIE MÉDIA - Images et Vidéos
+   ============================================ */
+
+.media-gallery {
+    margin-top: 2rem;
+}
+
+.media-gallery h4 {
+    margin-bottom: 1.5rem;
+}
+
+/* Grille responsive pour les images */
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.media-item {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    background: var(--light);
+}
+
+.media-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.media-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+.media-item video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Légende des médias */
+.media-caption {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 0.9rem;
+    color: var(--dark);
+    font-style: italic;
+    border-top: 1px solid var(--gray-light);
+}
+
+/* Images en pleine largeur si une seule */
+.media-grid.single-item {
+    grid-template-columns: 1fr;
+}
+
+.media-grid.single-item .media-item {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 /* iframe PDF - Style amélioré */
 iframe, embed {
     border-radius: var(--radius-lg);
@@ -520,8 +691,8 @@ iframe, embed {
     }
 
     .project-card-header {
-    position: relative;
-    padding: 0;
+        position: relative;
+        padding: 0;
     }
 
     .project-content {
@@ -537,6 +708,18 @@ iframe, embed {
         align-items: flex-start;
         gap: 0.5rem;
     }
+
+    /* Responsive média galerie */
+    .media-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Logo institution responsive */
+    .institution-logo {
+        width: 60px;
+        height: 60px;
+        border-width: 3px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -551,6 +734,13 @@ iframe, embed {
     .btn {
         padding: 0.6rem 1.2rem;
         font-size: 0.9rem;
+    }
+
+    /* Logo institution encore plus petit sur très petits écrans */
+    .institution-logo {
+        width: 55px;
+        height: 55px;
+        border-width: 3px;
     }
 }
 

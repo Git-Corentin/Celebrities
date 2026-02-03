@@ -1,4 +1,5 @@
 {% extends "portfolio/base.html" %}
+{% load media_filters %}
 
 {% block title %}{{ object.title }}{% endblock %}
 
@@ -10,9 +11,36 @@
     <!-- En-tête avec titre et bouton retour -->
     <div class="project-header">
       <div class="project-header-content">
-        <h1 class="card-title">{{ object.title }}</h1>
+        <h1 class="card-title">
+          {{ object.title }}
+          {% if object.is_research %}
+            <span class="research-badge-detail" title="Projet de recherche">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              Projet de recherche
+            </span>
+          {% endif %}
+        </h1>
         <p class="text-muted">{{ object.technologies }}</p>
+        
+        <!-- Info institution -->
+        {% if object.institution %}
+          <div class="institution-info">
+            <img src="{{ object.institution.logo.url }}" alt="{{ object.institution.name }}">
+            <div>
+              <div class="institution-name">{{ object.institution.name }}</div>
+              {% if object.institution.website %}
+                <a href="{{ object.institution.website }}" target="_blank" style="font-size: 0.85rem; color: var(--primary);">
+                  Visiter le site
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
       </div>
+      
       <a href="{% url 'project_list' %}" class="btn-back" title="Retour">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -38,16 +66,64 @@
       {% endif %}
     </div>
 
-    {% if object.pdf_report %}
-      <hr>
-      <h4>Rapport</h4>
-      <iframe
-          src="{{ object.pdf_report.url }}"
-          width="100%"
-          height="800px"
-          style="border:1px solid #ddd;">
-      </iframe>
-    {% endif %}
+    <!-- Galerie d'images -->
+    {% with images=object.media_files.all|filter_by_type:"image" %}
+      {% if images %}
+        <hr>
+        <div class="media-gallery">
+          <h4>Images du projet</h4>
+          <div class="media-grid {% if images|length == 1 %}single-item{% endif %}">
+            {% for media in images %}
+              <div class="media-item">
+                <img src="{{ media.file.url }}" alt="{{ media.caption|default:'Image du projet' }}">
+                {% if media.caption %}
+                  <div class="media-caption">{{ media.caption }}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Vidéos -->
+    {% with videos=object.media_files.all|filter_by_type:"video" %}
+      {% if videos %}
+        <hr>
+        <div class="media-gallery">
+          <h4>Vidéos</h4>
+          <div class="media-grid">
+            {% for media in videos %}
+              <div class="media-item">
+                <video controls>
+                  <source src="{{ media.file.url }}" type="video/mp4">
+                  Votre navigateur ne supporte pas la lecture de vidéos.
+                </video>
+                {% if media.caption %}
+                  <div class="media-caption">{{ media.caption }}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- PDFs -->
+    {% with pdfs=object.media_files.all|filter_by_type:"pdf" %}
+      {% if pdfs %}
+        {% for media in pdfs %}
+          <hr>
+          <h4>{% if media.caption %}{{ media.caption }}{% else %}Rapport PDF{% endif %}</h4>
+          <iframe
+              src="{{ media.file.url }}"
+              width="100%"
+              height="800px"
+              style="border:1px solid #ddd;">
+          </iframe>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
   </div>
 </div>

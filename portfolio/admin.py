@@ -1,31 +1,36 @@
+# portfolio/admin.py
 from django.contrib import admin
-from .models import Category, Project
+from .models import Category, Institution, Project, ProjectMedia
+
+
+class ProjectMediaInline(admin.TabularInline):
+    """Permet d'ajouter des médias directement depuis la page d'édition du projet"""
+    model = ProjectMedia
+    extra = 1
+    fields = ('media_type', 'file', 'caption', 'order')
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'order', 'color']
-    list_editable = ['order']
+    list_display = ('name', 'slug', 'color', 'order')
     prepopulated_fields = {'slug': ('name',)}
-    ordering = ['order', 'name']
+
+
+@admin.register(Institution)
+class InstitutionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'website')
+    prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'order', 'created_at']
-    list_filter = ['category', 'created_at']
-    list_editable = ['order']
-    search_fields = ['title', 'description']
-    ordering = ['category__order', 'order', '-created_at']
+    list_display = ('title', 'category', 'institution', 'is_research', 'created_at')
+    list_filter = ('category', 'institution', 'is_research')
+    search_fields = ('title', 'description')
+    inlines = [ProjectMediaInline]
 
-    fieldsets = (
-        ('Informations principales', {
-            'fields': ('title', 'category', 'short_description', 'description')
-        }),
-        ('Détails techniques', {
-            'fields': ('technologies', 'github_url', 'pdf_report')
-        }),
-        ('Métadonnées', {
-            'fields': ('created_at', 'order')
-        }),
-    )
+
+@admin.register(ProjectMedia)
+class ProjectMediaAdmin(admin.ModelAdmin):
+    list_display = ('project', 'media_type', 'caption', 'order', 'uploaded_at')
+    list_filter = ('media_type', 'project')
