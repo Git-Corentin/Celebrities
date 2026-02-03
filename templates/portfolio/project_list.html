@@ -1,0 +1,84 @@
+{% extends "portfolio/base.html" %}
+
+{% block title %}Projets{% endblock %}
+
+{% block content %}
+
+<h1 class="mb-4">Mes projets</h1>
+
+{% for category in categories %}
+  {% if category.projects.all %}
+    <div class="category-section">
+      <div class="category-header" style="border-left-color: {{ category.color }};">
+        <h2 class="category-title">{{ category.name }}</h2>
+        {% if category.description %}
+          <span class="category-description">— {{ category.description }}</span>
+        {% endif %}
+      </div>
+
+      <div class="row g-4">
+          {% for project in category.projects.all %}
+            <div class="col-md-6 col-lg-4">
+              <a href="{% url 'project_detail' project.pk %}" class="card-link">
+                <div class="card project-card h-100">
+                  <div class="project-card-header">
+                    <span class="category-badge" style="background: {{ category.color }};">
+                      {{ category.name }}
+                    </span>
+                  </div>
+
+                  <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ project.title }}</h5>
+                    <p class="card-text">{{ project.short_description }}</p>
+
+                    <div class="mt-auto">
+                      <span class="badge bg-secondary mb-2">{{ project.technologies }}</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+
+    </div>
+  {% endif %}
+{% endfor %}
+
+<!-- Projets sans catégorie -->
+{% with uncategorized=projects|default_if_none:"" %}
+  {% if uncategorized %}
+    {% with uncategorized_projects=projects %}
+      {% if uncategorized_projects %}
+        <div class="category-section">
+          <div class="category-header">
+            <h2 class="category-title">Autres projets</h2>
+          </div>
+
+          <div class="row g-4">
+            {% for project in uncategorized_projects %}
+              {% if not project.category %}
+                <div class="col-md-6 col-lg-4">
+                <a href="{% url 'project_detail' project.pk %}" class="card-link">
+                  <div class="card project-card h-100">
+                    <div class="card-body d-flex flex-column">
+                      <h5 class="card-title">{{ project.title }}</h5>
+                      <p class="card-text">{{ project.short_description }}</p>
+
+                      <div class="mt-auto">
+                        <span class="badge bg-secondary mb-2">{{ project.technologies }}</span><br>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+{% endwith %}
+
+{% endblock %}
