@@ -4,14 +4,13 @@ from .models import Category, Institution, Project, ProjectMedia
 
 
 class ProjectMediaInline(admin.TabularInline):
-    """Permet d'ajouter des médias directement depuis la page d'édition du projet"""
     model = ProjectMedia
     extra = 1
     fields = ('media_type', 'file', 'caption', 'order')
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(admin.ModelAdmin):  # ← ModelAdmin, PAS TranslationAdmin
     list_display = ('name', 'slug', 'color', 'order')
     prepopulated_fields = {'slug': ('name',)}
 

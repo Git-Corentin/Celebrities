@@ -19,15 +19,22 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.conf.urls.i18n import i18n_patterns
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('i18n/', include('django.conf.urls.i18n')),
     path("celebs/", include("celebs.urls")),
-    path("portfolio/", include("portfolio.urls")),
-    path('', RedirectView.as_view(url='/portfolio/', permanent=False)),
-
 
 ]
 #path('', RedirectView.as_view(url='/celebs/', permanent=False)),
+
+
+# URLs avec préfixe de langue (/fr/ et /en/)
+urlpatterns += i18n_patterns(
+    path('portfolio/', include('portfolio.urls')),  # /fr/portfolio/ et /en/portfolio/
+    path('', RedirectView.as_view(url='/portfolio/', permanent=False)),  # Redirige / vers /portfolio/
+)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

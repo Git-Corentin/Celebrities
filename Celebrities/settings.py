@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from django.utils.translation import gettext_lazy as _
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,13 +41,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #'modeltranslation',
+    'portfolio.apps.PortfolioConfig',
     'celebs',
-    'portfolio'
+
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -109,13 +114,31 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGES = [
+    ('fr', _('Français')),
+    ('en', _('English')),
+]
+
+LANGUAGE_CODE = 'fr'
 
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
+USE_L10N = True
 
 USE_TZ = True
+
+# Répertoire des fichiers de traduction
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
+# Pour django-modeltranslation
+#MODELTRANSLATION_DEFAULT_LANGUAGE = 'fr'
+#MODELTRANSLATION_LANGUAGES = ('fr', 'en')
+#MODELTRANSLATION_AUTO_POPULATE = True
+#MODELTRANSLATION_ENABLE_FALLBACKS = True
+
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")

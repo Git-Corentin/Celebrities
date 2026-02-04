@@ -1,0 +1,83 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-04 14:38+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: Celebrities/settings.py:118
+msgid "Français"
+msgstr "Français"
+
+#: Celebrities/settings.py:119
+msgid "English"
+msgstr "English"
+
+#: templates/portfolio/project_detail.html:18
+#: templates/portfolio/project_detail.html:23
+#: templates/portfolio/project_list.html:29
+#: templates/portfolio/project_list.html:89
+msgid "Projet de recherche"
+msgstr "Research Projects"
+
+#: templates/portfolio/project_detail.html:37
+msgid "Visiter le site"
+msgstr "Visit website"
+
+#: templates/portfolio/project_detail.html:45
+#: templates/portfolio/project_detail.html:49
+msgid "Retour"
+msgstr "Back"
+
+#: templates/portfolio/project_detail.html:64
+msgid "Voir sur GitHub"
+msgstr "View on GitHub"
+
+#: templates/portfolio/project_detail.html:75
+msgid "Images du projet"
+msgstr "Project Images"
+
+#: templates/portfolio/project_detail.html:79
+msgid "Image du projet"
+msgstr "Project Image"
+
+#: templates/portfolio/project_detail.html:95
+msgid "Vidéos"
+msgstr "Videos"
+
+#: templates/portfolio/project_detail.html:101
+msgid "Votre navigateur ne supporte pas la lecture de vidéos."
+msgstr "Your browser does not support video playback."
+
+#: templates/portfolio/project_detail.html:118
+msgid "Rapport PDF"
+msgstr "PDF Report"
+
+#: templates/portfolio/project_list.html:5
+msgid "Projets"
+msgstr "Projects"
+
+#: templates/portfolio/project_list.html:9
+msgid "Mes projets"
+msgstr "My projects"
+
+#: templates/portfolio/project_list.html:34
+#: templates/portfolio/project_list.html:94
+msgid "Recherche"
+msgstr "Research"
+
+#: templates/portfolio/project_list.html:78
+msgid "Autres projets"
+msgstr "Other projects"

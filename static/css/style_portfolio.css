@@ -658,6 +658,34 @@ iframe, embed {
     margin-top: var(--spacing-xs);
 }
 
+/* Sélecteur de langue */
+.language-selector {
+    display: flex;
+    align-items: center;
+}
+
+.language-select {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.language-select:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.language-select option {
+    background: var(--dark);
+    color: var(--white);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     h1 {
