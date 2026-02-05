@@ -1,5 +1,6 @@
-# portfolio/admin.py
 from django.contrib import admin
+from modeltranslation.admin import TranslationAdmin
+from . import translation
 from .models import Category, Institution, Project, ProjectMedia
 
 
@@ -10,19 +11,19 @@ class ProjectMediaInline(admin.TabularInline):
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):  # ← ModelAdmin, PAS TranslationAdmin
+class CategoryAdmin(TranslationAdmin):
     list_display = ('name', 'slug', 'color', 'order')
     prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Institution)
-class InstitutionAdmin(admin.ModelAdmin):
+class InstitutionAdmin(TranslationAdmin):
     list_display = ('name', 'slug', 'website')
     prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
+class ProjectAdmin(TranslationAdmin):
     list_display = ('title', 'category', 'institution', 'is_research', 'created_at')
     list_filter = ('category', 'institution', 'is_research')
     search_fields = ('title', 'description')

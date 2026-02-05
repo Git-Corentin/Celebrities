@@ -41,9 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #'modeltranslation',
-    'portfolio.apps.PortfolioConfig',
+    'modeltranslation',
     'celebs',
+    'portfolio.apps.PortfolioConfig',
 
 ]
 
@@ -124,7 +124,6 @@ LANGUAGE_CODE = 'fr'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-USE_L10N = True
 
 USE_TZ = True
 
@@ -134,10 +133,10 @@ LOCALE_PATHS = [
 ]
 
 # Pour django-modeltranslation
-#MODELTRANSLATION_DEFAULT_LANGUAGE = 'fr'
-#MODELTRANSLATION_LANGUAGES = ('fr', 'en')
-#MODELTRANSLATION_AUTO_POPULATE = True
-#MODELTRANSLATION_ENABLE_FALLBACKS = True
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'fr'
+MODELTRANSLATION_LANGUAGES = ('fr', 'en')
+MODELTRANSLATION_PREPOPULATE_LANGUAGE = 'fr'
+MODELTRANSLATION_AUTO_POPULATE = True
 
 
 MEDIA_URL = "/media/"
