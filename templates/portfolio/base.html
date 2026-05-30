@@ -3,47 +3,331 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Portfolio{% endblock %}</title>
-
-    <!-- Google Fonts - Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Notre CSS personnalisé -->
-    <link rel="stylesheet" href="{% static 'css/style_portfolio.css' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Portfolio{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style_portfolio.css' %}?v=5">
+  <script>
+  window.Term=(function(){
+    var K='pf_term_v3';
+    function load(){try{return JSON.parse(sessionStorage.getItem(K))||{};}catch(e){return{};}}
+    function save(s){try{sessionStorage.setItem(K,JSON.stringify(s));}catch(e){}}
+    return{load:load,save:save};
+  })();
+  </script>
 </head>
-
 <body>
 
-<nav class="navbar navbar-dark bg-dark mb-4">
-  <div class="container">
-    <span class="navbar-brand">Corentin Nicodème</span>
+<canvas id="data-canvas"></canvas>
 
-    <!-- Sélecteur de langue -->
-    <div class="language-selector">
-      <form action="{% url 'set_language' %}" method="post">
+<div class="pf-navbar">
+  <div class="pf-navbar-inner">
+    <a class="pf-brand" href="{% url 'project_list' %}"> &nbsp;Portofio Corentin Nicodème</a>
+
+    {# Language switcher — flag style, no translated text #}
+    {% get_current_language as CUR_LANG %}
+    <div class="pf-lang-form">
+      <form action="{% url 'set_language' %}" method="post" id="lang-form-fr" style="display:inline">
         {% csrf_token %}
         <input name="next" type="hidden" value="{{ request.path }}">
-        <select name="language" onchange="this.form.submit()" class="language-select">
-          {% get_current_language as LANGUAGE_CODE %}
-          {% get_available_languages as LANGUAGES %}
-          {% for lang_code, lang_name in LANGUAGES %}
-            <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
-              {{ lang_name }}
-            </option>
-          {% endfor %}
-        </select>
+        <input name="language" type="hidden" value="fr">
+        <button type="submit" class="pf-flag-btn {% if CUR_LANG == 'fr' %}active{% endif %}"
+                title="Français" onclick="logLang('fr')">
+          <span class="pf-flag">🇫🇷</span>
+          <span class="pf-lang-code">FR</span>
+        </button>
+      </form>
+      <form action="{% url 'set_language' %}" method="post" id="lang-form-en" style="display:inline">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        <input name="language" type="hidden" value="en">
+        <button type="submit" class="pf-flag-btn {% if CUR_LANG == 'en' %}active{% endif %}"
+                title="English" onclick="logLang('en')">
+          <span class="pf-flag">🇬🇧</span>
+          <span class="pf-lang-code">EN</span>
+        </button>
       </form>
     </div>
   </div>
-</nav>
-
-<div class="container">
-    {% block content %}{% endblock %}
 </div>
 
+{% block content %}{% endblock %}
+
+<script>
+function logLang(t){
+  try{var s=Term.load();if(!s.linesRaw)s.linesRaw=[];
+    s.linesRaw.push({cls:'',html:'<span class="t-prompt">~$</span> <span class="t-cmd">setlocale</span> <span class="t-arg">--lang '+t+'</span>'});
+    s.replay=true;s.booted=true;Term.save(s);}catch(e){}
+}
+
+/* ── Interactive neural canvas ── */
+(function(){
+  try{
+    var cv=document.getElementById('data-canvas');
+    if(!cv)return;
+    var ctx=cv.getContext('2d'),W,H;
+    var mouse={x:-1000,y:-1000};
+
+    /* ── Config ── */
+    var NODE_COUNT   = 55;
+    var LABEL_COUNT  = 32;
+    var CONNECT_DIST = 160;
+    var MOUSE_DIST   = 140;
+    var MOUSE_FORCE  = 0.012;
+
+    /* DS labels floating */
+    var LABELS=['σ','∇','μ','Σ','λ','∂','∫','r²','F1','AUC',
+                'loss','acc','relu','softmax','dropout',
+                '.fit()','predict','epoch','batch','lr',
+                '01101','10010','P(x)','argmax','tanh'];
+
+    var CL=['rgba(0,245,160,','rgba(0,212,255,','rgba(167,139,250,'];
+
+    /* Nodes: neural network nodes */
+    var nodes=[];
+    var labels=[];
+
+    function rnd(a,b){return a+Math.random()*(b-a);}
+
+    function resize(){
+      W=cv.width=innerWidth;
+      H=cv.height=innerHeight;
+    }
+
+    function mkNode(){
+      return{
+        x:rnd(0,W), y:rnd(0,H),
+        vx:rnd(-0.3,0.3), vy:rnd(-0.3,0.3),
+        r:rnd(1.5,3.5),
+        color:CL[~~(Math.random()*3)],
+        alpha:rnd(0.15,0.45),
+        pulse:Math.random()*6.28,
+      };
+    }
+
+    function mkLabel(){
+      return{
+        x:rnd(0,W), y:rnd(0,H),
+        vx:rnd(-0.15,0.15), vy:rnd(-0.18,0.05),
+        text:LABELS[~~(Math.random()*LABELS.length)],
+        color:CL[~~(Math.random()*3)],
+        alpha:rnd(0.04,0.14),
+        fs:rnd(9,14),
+        life:0,max:rnd(300,700),
+      };
+    }
+
+    function init(){
+      resize();
+      nodes=[]; labels=[];
+      for(var i=0;i<NODE_COUNT;i++) nodes.push(mkNode());
+      for(var j=0;j<LABEL_COUNT;j++) labels.push(mkLabel());
+    }
+
+    function frame(){
+      /* Subtle dark gradient background — replaces static bg-image */
+      ctx.clearRect(0,0,W,H);
+
+      /* Background: deep space gradient */
+      var grd=ctx.createRadialGradient(W*0.15,H*0.15,0,W*0.15,H*0.15,W*0.55);
+      grd.addColorStop(0,'rgba(0,245,160,0.028)');
+      grd.addColorStop(1,'rgba(3,7,18,0)');
+      ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+      var grd2=ctx.createRadialGradient(W*0.85,H*0.85,0,W*0.85,H*0.85,W*0.55);
+      grd2.addColorStop(0,'rgba(0,212,255,0.022)');
+      grd2.addColorStop(1,'rgba(3,7,18,0)');
+      ctx.fillStyle=grd2; ctx.fillRect(0,0,W,H);
+
+      /* Dot grid */
+      ctx.fillStyle='rgba(0,245,160,0.045)';
+      var gs=30;
+      for(var gx=0;gx<W;gx+=gs)for(var gy=0;gy<H;gy+=gs){
+        ctx.beginPath();ctx.arc(gx,gy,0.7,0,6.28);ctx.fill();
+      }
+
+      /* Update + draw nodes */
+      for(var i=0;i<nodes.length;i++){
+        var n=nodes[i];
+        n.x+=n.vx; n.y+=n.vy;
+        /* Soft wall bounce */
+        if(n.x<0||n.x>W) n.vx*=-1;
+        if(n.y<0||n.y>H) n.vy*=-1;
+        /* Mouse repulsion */
+        var mdx=n.x-mouse.x, mdy=n.y-mouse.y;
+        var md=Math.sqrt(mdx*mdx+mdy*mdy);
+        if(md<MOUSE_DIST&&md>0){
+          var force=MOUSE_FORCE*(1-md/MOUSE_DIST);
+          n.vx+=mdx/md*force;
+          n.vy+=mdy/md*force;
+        }
+        /* Damping */
+        n.vx*=0.995; n.vy*=0.995;
+        n.pulse+=0.02;
+        /* Draw node */
+        var pr=n.r*(1+Math.sin(n.pulse)*0.25);
+        ctx.beginPath(); ctx.arc(n.x,n.y,pr,0,6.28);
+        ctx.fillStyle=n.color+n.alpha+')'; ctx.fill();
+      }
+
+      /* Draw edges between nearby nodes */
+      for(var i=0;i<nodes.length;i++){
+        for(var k=i+1;k<nodes.length;k++){
+          var dx=nodes[i].x-nodes[k].x, dy=nodes[i].y-nodes[k].y;
+          var d=Math.sqrt(dx*dx+dy*dy);
+          if(d<CONNECT_DIST){
+            /* Mouse proximity brightens edge */
+            var edgeCx=(nodes[i].x+nodes[k].x)/2, edgeCy=(nodes[i].y+nodes[k].y)/2;
+            var mEdgeDx=edgeCx-mouse.x, mEdgeDy=edgeCy-mouse.y;
+            var mEdgeDist=Math.sqrt(mEdgeDx*mEdgeDx+mEdgeDy*mEdgeDy);
+            var bright=mEdgeDist<200?0.04+0.1*(1-mEdgeDist/200):0.04;
+            var alpha=bright*(1-d/CONNECT_DIST);
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x,nodes[i].y);
+            ctx.lineTo(nodes[k].x,nodes[k].y);
+            ctx.strokeStyle='rgba(0,245,160,'+alpha+')';
+            ctx.lineWidth=0.6; ctx.stroke();
+          }
+        }
+      }
+
+      /* Floating DS labels */
+      for(var j=labels.length-1;j>=0;j--){
+        var lb=labels[j];
+        lb.x+=lb.vx; lb.y+=lb.vy; lb.life++;
+        /* Fade in/out */
+        var pr2=lb.life/lb.max;
+        var fa=pr2<0.1?(pr2/0.1)*lb.alpha:pr2>0.85?((1-pr2)/0.15)*lb.alpha:lb.alpha;
+        ctx.font=lb.fs+"px 'JetBrains Mono',monospace";
+        ctx.fillStyle=lb.color+fa+')';
+        ctx.fillText(lb.text,lb.x,lb.y);
+        if(lb.life>=lb.max||lb.y<-20||lb.x<-60||lb.x>W+60){
+          labels[j]=mkLabel();
+          labels[j].y=H+10; /* re-enter from bottom */
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    /* Mouse tracking */
+    addEventListener('mousemove',function(e){mouse.x=e.clientX;mouse.y=e.clientY;});
+    addEventListener('mouseleave',function(){mouse.x=-1000;mouse.y=-1000;});
+    addEventListener('resize',function(){
+      resize();
+      /* Reposition nodes within new bounds */
+      nodes.forEach(function(n){n.x=Math.min(n.x,W);n.y=Math.min(n.y,H);});
+    });
+
+    /* Card cursor-glow */
+    addEventListener('mousemove',function(e){
+      var card=e.target.closest&&e.target.closest('.project-card');
+      if(!card)return;
+      var r=card.getBoundingClientRect();
+      card.style.setProperty('--mx',(e.clientX-r.left)+'px');
+      card.style.setProperty('--my',(e.clientY-r.top)+'px');
+    });
+
+    init(); frame();
+  }catch(e){
+    /* Canvas optional */
+    document.body.style.background='#030712';
+  }
+})();
+
+
+/* ── Institution sidebar ── */
+(function(){
+  try {
+    function buildSidebar(){
+      /* Create sidebar DOM once */
+      var sb = document.getElementById('inst-sidebar');
+      if(!sb){
+        sb = document.createElement('div');
+        sb.id = 'inst-sidebar';
+        sb.innerHTML =
+          '<div id="inst-sidebar-inner">'
+          +'<img id="inst-sidebar-logo" src="" alt="">'
+          +'<div id="inst-sidebar-name"></div>'
+          +'</div>'
+          +'<div id="inst-sidebar-corner"></div>';
+        document.body.appendChild(sb);
+      }
+
+      var sbLogo  = document.getElementById('inst-sidebar-logo');
+      var sbName  = document.getElementById('inst-sidebar-name');
+      var scanTO  = null;
+      var hideTO  = null;
+      var current = null;
+
+      function show(img){
+        if(current === img) return;
+        current = img;
+
+        clearTimeout(hideTO);
+        sb.classList.remove('scanning');
+
+        /* Update content */
+        sbLogo.src = img.src;
+        sbLogo.alt = img.alt;
+        sbName.textContent = img.alt;
+
+        /* Activate */
+        sb.classList.add('active');
+
+        /* Trigger scan animation */
+        void sb.offsetWidth; /* reflow */
+        sb.classList.add('scanning');
+        clearTimeout(scanTO);
+        scanTO = setTimeout(function(){
+          sb.classList.remove('scanning');
+        }, 700);
+      }
+
+      function hide(){
+        hideTO = setTimeout(function(){
+          sb.classList.remove('active','scanning');
+          current = null;
+        }, 180);
+      }
+
+      /* Attach to every project card that has a logo */
+      function attachEvents(){
+        var logos = document.querySelectorAll('.institution-logo');
+        logos.forEach(function(img){
+          var card = img.closest('.project-card');
+          if(!card || card._instAttached) return;
+          card._instAttached = true;
+          card.addEventListener('mouseenter', function(){ show(img); });
+          card.addEventListener('mouseleave', hide);
+        });
+      }
+
+      if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', attachEvents);
+      } else {
+        attachEvents();
+      }
+
+      /* Re-attach after terminal reveals sections */
+      var obs = new MutationObserver(attachEvents);
+      obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    }
+
+    buildSidebar();
+  } catch(e){}
+})();
+
+/* Nav link tracking */
+(function(){try{
+  var links=document.querySelectorAll('a[href]');
+  for(var i=0;i<links.length;i++){(function(a){
+    if(a.hostname===location.hostname&&!a.target)
+      a.addEventListener('click',function(){var s=Term.load();s.replay=true;Term.save(s);});
+  })(links[i]);}
+}catch(e){}})();
+</script>
 </body>
 </html>
