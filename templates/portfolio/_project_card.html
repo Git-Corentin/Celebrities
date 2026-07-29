@@ -1,0 +1,48 @@
+{% load i18n %}
+{% load media_filters %}
+{# Expects: project, cat_name, cat_color, index #}
+<div class="pf-reveal" style="--i:{{ index|default:0 }}"
+     id="p-{{ project.pk }}"
+     data-plot-point
+     data-date="{{ project.created_at|date:'Y-m-d' }}"
+     data-cat="{{ cat_name }}"
+     data-color="{{ cat_color }}"
+     data-title="{{ project.title }}">
+  <a class="pf-card-link" href="{% url 'project_detail' project.pk %}">
+    <article class="pf-card" style="--cat:{{ cat_color }}">
+
+      <div class="pf-card-body">
+        <div class="pf-card-meta">
+          <span class="pf-card-year">{{ project.created_at|date:"Y" }}</span>
+          {% if project.is_research %}
+            <span class="pf-tag-research">{% trans "Recherche" %}</span>
+          {% endif %}
+        </div>
+
+        <h3><span class="pf-card-title">{{ project.title }}</span></h3>
+
+        <p class="pf-card-abstract">{{ project.short_description }}</p>
+
+        {% if project.technologies %}
+          <div class="pf-card-tech">
+            {% for tech in project.technologies|split_commas %}
+              <span class="pf-tech-item">{{ tech }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if project.institution %}
+        <div class="pf-affil">
+          <img class="pf-affil-logo" loading="lazy"
+               src="{{ project.institution.logo.url }}" alt="">
+          <span class="pf-affil-text">
+            <span class="pf-affil-label">{% trans "Cadre" %}</span>
+            <span class="pf-affil-name">{{ project.institution.name }}</span>
+          </span>
+        </div>
+      {% endif %}
+
+    </article>
+  </a>
+</div>

@@ -96,6 +96,7 @@ class ProjectMedia(models.Model):
         ('image', 'Image'),
         ('video', 'Vidéo'),
         ('pdf', 'PDF'),
+        ('markdown', 'Markdown / README')
     ]
 
     project = models.ForeignKey(

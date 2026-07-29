@@ -2,128 +2,170 @@
 {% load i18n %}
 {% load media_filters %}
 
-{% block title %}{{ object.title }}{% endblock %}
+{% block title %}{{ object.title }} — Corentin Nicodème{% endblock %}
+{% block meta_description %}{{ object.short_description|striptags|truncatewords:30 }}{% endblock %}
 
 {% block content %}
-<script>
-(function(){try{
-  var s=window.Term?Term.load():{};s=s||{};
-  if(!s.linesRaw)s.linesRaw=[];
-  s.linesRaw.push({cls:'',
-    html:'<span class="t-prompt">~$</span>'
-        +' <span class="t-cmd">portfolio</span>'
-        +' <span class="t-arg">open "{{ object.title|slugify }}"</span>'});
-  s.replay=true;s.booted=true;
-  if(window.Term)Term.save(s);
-}catch(e){}})();
-</script>
+<div class="pf-shell pf-detail">
 
-{% if object.institution %}
-<div id="inst-detail-sidebar">
-  <img src="{{ object.institution.logo.url }}" alt="{{ object.institution.name }}">
-  <span>{{ object.institution.name }}</span>
-  <div class="sb-corner"></div>
-</div>
-{% endif %}
+  <a class="pf-back" href="{% url 'project_list' %}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    {% trans "Tous les projets" %}
+  </a>
 
-<div class="pf-page">
-<div class="pf-inner">
-<div class="detail-card">
-  <div class="detail-body">
-
-    <div class="project-header">
-      <div class="project-header-content">
-        <h1 class="detail-title">
-          {{ object.title }}
-          {% if object.is_research %}
-            <span class="research-badge-detail">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-              {% trans "Projet de recherche" %}
-            </span>
-          {% endif %}
-        </h1>
-        <p class="detail-tech">{{ object.technologies }}</p>
-        {% if object.institution %}
-          {# Institution shown in fixed sidebar — keep small inline ref for semantics #}
-          <div class="institution-info">
-            <div>
-              <div class="institution-name">{{ object.institution.name }}</div>
-              {% if object.institution.website %}
-                <a href="{{ object.institution.website }}" target="_blank" rel="noopener">{% trans "Visiter le site" %} ↗</a>
-              {% endif %}
-            </div>
-          </div>
-        {% endif %}
-      </div>
-      <a href="{% url 'project_list' %}" class="btn-back">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        {% trans "Retour" %}
-      </a>
+  <header class="pf-detail-head">
+    <div class="pf-eyebrow">
+      {% if object.category %}
+        <span class="pf-swatch" style="--cat:{{ object.category.color }}"></span>
+        <span>{{ object.category.name }}</span>
+      {% endif %}
+      <span>{{ object.created_at|date:"F Y" }}</span>
+      {% if object.is_research %}
+        <span class="pf-tag-research">{% trans "Recherche" %}</span>
+      {% endif %}
     </div>
 
-    <div class="project-description"><p>{{ object.description }}</p></div>
+    <h1 class="pf-detail-title">{{ object.title }}</h1>
 
-    {% if object.github_url %}
-      <div class="project-actions">
-        <a href="{{ object.github_url }}" target="_blank" rel="noopener" class="btn-github">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-          {% trans "Voir sur GitHub" %}
-        </a>
+    {% if object.short_description %}
+      <p class="pf-detail-lede">{{ object.short_description }}</p>
+    {% endif %}
+
+    {% if object.institution %}
+      <div class="pf-affil-card">
+        <img src="{{ object.institution.logo.url }}" alt="{{ object.institution.name }}" loading="lazy">
+        <div>
+          <div class="pf-affil-label">{% trans "Cadre" %}</div>
+          <div class="pf-affil-card-name">{{ object.institution.name }}</div>
+          {% if object.institution.website %}
+            <a href="{{ object.institution.website }}" target="_blank" rel="noopener noreferrer">
+              {{ object.institution.website|cut:"https://"|cut:"http://" }} ↗
+            </a>
+          {% endif %}
+        </div>
       </div>
     {% endif %}
 
-    {% with images=object.media_files.all|filter_by_type:"image" %}
-      {% if images %}
-        <hr class="detail-hr">
-        <h2 class="media-section-title">{% trans "Images du projet" %}</h2>
-        <div class="media-grid {% if images|length == 1 %}single-item{% endif %}">
-          {% for media in images %}
-            <div class="media-item">
-              <img src="{{ media.file.url }}" alt="{{ media.caption|default:'' }}">
-              {% if media.caption %}<div class="media-caption">{{ media.caption }}</div>{% endif %}
-            </div>
-          {% endfor %}
-        </div>
+    <dl class="pf-specs">
+      {% if object.technologies %}
+        <dt class="pf-spec-k">{% trans "Outils" %}</dt>
+        <dd class="pf-spec-v">{{ object.technologies }}</dd>
       {% endif %}
-    {% endwith %}
+      {% if object.github_url %}
+        <dt class="pf-spec-k">{% trans "Code" %}</dt>
+        <dd class="pf-spec-v">
+          <a href="{{ object.github_url }}" target="_blank" rel="noopener noreferrer">
+            {{ object.github_url|cut:"https://" }} ↗
+          </a>
+        </dd>
+      {% endif %}
+    </dl>
+  </header>
 
-    {% with videos=object.media_files.all|filter_by_type:"video" %}
-      {% if videos %}
-        <hr class="detail-hr">
-        <h2 class="media-section-title">{% trans "Vidéos" %}</h2>
-        <div class="media-grid">
+  {# ── Long description ── #}
+  {% if object.description %}
+    <section class="pf-block">
+      <div class="pf-block-label"><span>{% trans "Présentation" %}</span></div>
+      <div class="pf-block-body">
+        <div class="pf-prose">{{ object.description|linebreaks }}</div>
+      </div>
+    </section>
+  {% endif %}
+
+  {# ── Markdown documents (README, method, notes) ── #}
+  {% with docs=object.media_files.all|filter_by_type:"markdown" %}
+    {% for media in docs %}
+      <section class="pf-block">
+        <div class="pf-block-label">
+          <span>{% if media.caption %}{{ media.caption }}{% else %}{% trans "Documentation" %}{% endif %}</span>
+        </div>
+        <div class="pf-block-body">
+          <div class="pf-prose">{{ media|render_markdown }}</div>
+        </div>
+      </section>
+    {% endfor %}
+  {% endwith %}
+
+  {# ── Figures ── #}
+  {% with images=object.media_files.all|filter_by_type:"image" %}
+    {% if images %}
+      <section class="pf-block">
+        <div class="pf-block-label"><span>{% trans "Figures" %}</span></div>
+        <div class="pf-block-body">
+          <div class="pf-figures {% if images|length == 1 %}is-single{% endif %}">
+            {% for media in images %}
+              <figure class="pf-fig">
+                <button type="button" data-lightbox
+                        data-caption="{{ media.caption|default:'' }}"
+                        aria-label="{% trans 'Agrandir' %}">
+                  <img src="{{ media.file.url }}" alt="{{ media.caption|default:'' }}" loading="lazy">
+                </button>
+                {% if media.caption %}
+                  <figcaption>{{ media.caption }}</figcaption>
+                {% else %}
+                  <div class="pf-fig-num"></div>
+                {% endif %}
+              </figure>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+  {% endwith %}
+
+  {# ── Videos ── #}
+  {% with videos=object.media_files.all|filter_by_type:"video" %}
+    {% if videos %}
+      <section class="pf-block">
+        <div class="pf-block-label"><span>{% trans "Vidéos" %}</span></div>
+        <div class="pf-block-body">
           {% for media in videos %}
-            <div class="media-item">
-              <video controls><source src="{{ media.file.url }}" type="video/mp4">{% trans "Votre navigateur ne supporte pas la lecture de vidéos." %}</video>
-              {% if media.caption %}<div class="media-caption">{{ media.caption }}</div>{% endif %}
+            <figure class="pf-video">
+              <video controls preload="metadata">
+                <source src="{{ media.file.url }}" type="video/mp4">
+                {% trans "Votre navigateur ne prend pas en charge la lecture vidéo." %}
+              </video>
+              {% if media.caption %}<figcaption>{{ media.caption }}</figcaption>{% endif %}
+            </figure>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endwith %}
+
+  {# ── PDF documents ── #}
+  {% with pdfs=object.media_files.all|filter_by_type:"pdf" %}
+    {% if pdfs %}
+      <section class="pf-block">
+        <div class="pf-block-label"><span>{% trans "Documents" %}</span></div>
+        <div class="pf-block-body">
+          {% for media in pdfs %}
+            <div class="pf-doc">
+              <div class="pf-doc-bar">
+                <span class="pf-doc-name">
+                  {% if media.caption %}{{ media.caption }}{% else %}{{ media.file.name|basename }}{% endif %}
+                </span>
+                <a class="pf-doc-open" href="{{ media.file.url }}" target="_blank" rel="noopener noreferrer">
+                  {% trans "Ouvrir" %} ↗
+                </a>
+              </div>
+              <iframe src="{{ media.file.url }}#view=FitH"
+                      title="{% if media.caption %}{{ media.caption }}{% else %}PDF{% endif %}"
+                      loading="lazy"></iframe>
+              <div class="pf-doc-mobile">
+                <a class="pf-btn" href="{{ media.file.url }}" target="_blank" rel="noopener noreferrer">
+                  {% trans "Ouvrir le PDF" %}
+                </a>
+              </div>
             </div>
           {% endfor %}
         </div>
-      {% endif %}
-    {% endwith %}
+      </section>
+    {% endif %}
+  {% endwith %}
 
-    {% with pdfs=object.media_files.all|filter_by_type:"pdf" %}
-      {% if pdfs %}
-        {% for media in pdfs %}
-          <hr class="detail-hr">
-          <h2 class="media-section-title">{% if media.caption %}{{ media.caption }}{% else %}{% trans "Rapport PDF" %}{% endif %}</h2>
-          <iframe src="{{ media.file.url }}" width="100%" height="800px"></iframe>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-  </div>
 </div>
-</div>
-</div>
-
 {% endblock %}

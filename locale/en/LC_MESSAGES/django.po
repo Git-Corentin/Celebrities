@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-04 14:38+0000\n"
+"POT-Creation-Date: 2026-07-29 20:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
 #: Celebrities/settings.py:118
 msgid "Français"
 msgstr "Français"
@@ -25,59 +26,109 @@ msgstr "Français"
 msgid "English"
 msgstr "English"
 
-#: templates/portfolio/project_detail.html:18
-#: templates/portfolio/project_detail.html:23
-#: templates/portfolio/project_list.html:29
-#: templates/portfolio/project_list.html:89
-msgid "Projet de recherche"
-msgstr "Research Projects"
+#: templates/portfolio/_project_card.html:18
+#: templates/portfolio/project_detail.html:27
+msgid "Recherche"
+msgstr "Research"
 
-#: templates/portfolio/project_detail.html:37
-msgid "Visiter le site"
-msgstr "Visit website"
+#: templates/portfolio/_project_card.html:40
+#: templates/portfolio/project_detail.html:41
+msgid "Cadre"
+msgstr "Affiliation"
 
-#: templates/portfolio/project_detail.html:45
-#: templates/portfolio/project_detail.html:49
-msgid "Retour"
-msgstr "Back"
+#: templates/portfolio/base.html:9
+msgid ""
+"Portfolio de projets en data science, apprentissage automatique et recherche."
+msgstr "A portfolio of data science, machine learning and research projects."
 
-#: templates/portfolio/project_detail.html:64
-msgid "Voir sur GitHub"
-msgstr "View on GitHub"
+#: templates/portfolio/base.html:21
+msgid "Aller au contenu"
+msgstr "Skip to content"
 
-#: templates/portfolio/project_detail.html:75
-msgid "Images du projet"
-msgstr "Project Images"
+#: templates/portfolio/base.html:30
+msgid "Langue"
+msgstr "Language"
 
-#: templates/portfolio/project_detail.html:79
-msgid "Image du projet"
-msgstr "Project Image"
+#: templates/portfolio/base.html:57
+msgid "Data science · Apprentissage automatique · Recherche"
+msgstr "Data science · Machine learning · Research"
 
-#: templates/portfolio/project_detail.html:95
+#: templates/portfolio/base.html:62
+msgid "Image agrandie"
+msgstr "Enlarged image"
+
+#: templates/portfolio/base.html:63
+msgid "Fermer"
+msgstr "Close"
+
+#: templates/portfolio/project_detail.html:16
+msgid "Tous les projets"
+msgstr "All projects"
+
+#: templates/portfolio/project_detail.html:54
+msgid "Outils"
+msgstr "Tools"
+
+#: templates/portfolio/project_detail.html:58
+msgid "Code"
+msgstr "Code"
+
+#: templates/portfolio/project_detail.html:71
+msgid "Présentation"
+msgstr "Overview"
+
+#: templates/portfolio/project_detail.html:83
+msgid "Documentation"
+msgstr "Documentation"
+
+#: templates/portfolio/project_detail.html:96
+msgid "Figures"
+msgstr "Figures"
+
+#: templates/portfolio/project_detail.html:103
+msgid "Agrandir"
+msgstr "Enlarge"
+
+#: templates/portfolio/project_detail.html:123
 msgid "Vidéos"
 msgstr "Videos"
 
-#: templates/portfolio/project_detail.html:101
-msgid "Votre navigateur ne supporte pas la lecture de vidéos."
+#: templates/portfolio/project_detail.html:129
+msgid "Votre navigateur ne prend pas en charge la lecture vidéo."
 msgstr "Your browser does not support video playback."
 
-#: templates/portfolio/project_detail.html:118
-msgid "Rapport PDF"
-msgstr "PDF Report"
+#: templates/portfolio/project_detail.html:143
+msgid "Documents"
+msgstr "Documents"
+
+#: templates/portfolio/project_detail.html:152
+msgid "Ouvrir"
+msgstr "Open"
+
+#: templates/portfolio/project_detail.html:160
+msgid "Ouvrir le PDF"
+msgstr "Open the PDF"
 
 #: templates/portfolio/project_list.html:5
 msgid "Projets"
 msgstr "Projects"
 
-#: templates/portfolio/project_list.html:9
-msgid "Mes projets"
-msgstr "My projects"
+#: templates/portfolio/project_list.html:12
+msgid ""
+"Data scientist. Je construis des modèles et des outils d'analyse, de la "
+"donnée brute jusqu'au résultat exploitable."
+msgstr ""
+"Data scientist. I build models and analysis tools, from raw data through to "
+"results you can act on."
 
-#: templates/portfolio/project_list.html:34
-#: templates/portfolio/project_list.html:94
-msgid "Recherche"
-msgstr "Research"
+#: templates/portfolio/project_list.html:18
+msgid "Projets par domaine et par date"
+msgstr "Projects by field and date"
 
-#: templates/portfolio/project_list.html:78
+#: templates/portfolio/project_list.html:19
+msgid "survolez un point"
+msgstr "hover a point"
+
+#: templates/portfolio/project_list.html:54
 msgid "Autres projets"
 msgstr "Other projects"

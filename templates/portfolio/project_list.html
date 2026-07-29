@@ -2,351 +2,67 @@
 {% load i18n %}
 {% load media_filters %}
 
-{% block title %}{% trans "Projets" %}{% endblock %}
+{% block title %}Corentin Nicodème — {% trans "Projets" %}{% endblock %}
 
 {% block content %}
-<style>
-/* Critical layout */
-.pf-cols{display:flex!important;flex-direction:row!important;gap:3.5rem!important;align-items:flex-start!important;width:100%!important}
-.pf-main{flex:1 1 auto!important;min-width:0!important}
-.pf-aside{flex:0 0 340px!important;width:340px!important;min-width:340px!important;max-width:340px!important}
-@media(max-width:900px){.pf-cols{flex-direction:column!important}.pf-aside{width:100%!important;min-width:0;max-width:none!important;flex:none!important}}
-</style>
+<div class="pf-shell">
 
-<div class="pf-page">
-<div class="pf-inner">
-<div class="pf-cols" style="display:flex;flex-direction:row;gap:3.5rem;align-items:flex-start;width:100%">
+  <section class="pf-hero">
+    <h1 class="pf-hero-name">Corentin Nicodème</h1>
+    <p class="pf-hero-role">{% trans "Data scientist. Je construis des modèles et des outils d'analyse, de la donnée brute jusqu'au résultat exploitable." %}</p>
+  </section>
 
-<div class="pf-main" style="flex:1 1 auto;min-width:0;overflow:hidden">
+  {# ── Figure 1 : the projects themselves, plotted ── #}
+  <figure class="pf-figure">
+    <figcaption class="pf-figure-head">
+      <span><strong>Fig. 1</strong> — {% trans "Projets par domaine et par date" %}</span>
+      <span class="pf-figure-hint">{% trans "survolez un point" %}</span>
+    </figcaption>
+    <div class="pf-plot-wrap" id="pf-plot-wrap">
+      <div class="pf-tip"></div>
+    </div>
+  </figure>
 
-  <div class="sys-header">
-    <h1>{% trans "Mes projets" %}</h1>
-    <div class="sys-indicator"><span class="sys-dot"></span><span>ONLINE</span></div>
-  </div>
-
+  {# ── One section per category ── #}
   {% for category in categories %}
     {% if category.projects.all %}
-      <div class="category-section" data-projects="{{ category.projects.all|length }}">
-        <div class="category-header"
-             style="--category-color:{{ category.color }};border-left-color:{{ category.color }};">
-          <h2 class="category-title">{{ category.name }}</h2>
-          <span class="category-count"
-                style="color:{{ category.color }};border:1px solid {{ category.color }}40;background:{{ category.color }}0d;">
-            {{ category.projects.all|length }} proj.
-          </span>
+      <section class="pf-section">
+        <header class="pf-section-head">
+          <span class="pf-swatch" style="--cat:{{ category.color }}"></span>
+          <h2 class="pf-section-title">{{ category.name }}</h2>
+          <span class="pf-section-count">n = {{ category.projects.all|length }}</span>
           {% if category.description %}
-            <span class="category-description">— {{ category.description }}</span>
+            <span class="pf-section-note">{{ category.description }}</span>
           {% endif %}
-        </div>
-        <div class="row g-4">
+        </header>
+
+        <div class="pf-grid">
           {% for project in category.projects.all %}
-            <div class="col-md-6 col-lg-4">
-              <a href="{% url 'project_detail' project.pk %}" class="card-link">
-                <div class="project-card">
-                  {% if project.is_research %}
-                    <div class="research-badge">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                      </svg>
-                      {% trans "Recherche" %}
-                    </div>
-                  {% endif %}
-                  <div class="pc-inner">
-                    <div class="pc-body">
-                      <div class="pc-index">// {{ forloop.parentloop.counter }}.{{ forloop.counter }}</div>
-                      <h5 class="pc-title">{{ project.title }}</h5>
-                      <p class="pc-text">{{ project.short_description }}</p>
-                      <span class="pc-badge">{{ project.technologies }}</span>
-                    </div>
-                    <div class="pc-cat-strip"
-                         style="background:{{ category.color }}18;color:{{ category.color }};border-top-color:{{ category.color }}30;">
-                      {{ category.name }}
-                    </div>
-                  </div>
-                  {% if project.institution %}
-                    <img src="{{ project.institution.logo.url }}"
-                         alt="{{ project.institution.name }}"
-                         class="institution-logo"
-                         title="{{ project.institution.name }}">
-                  {% endif %}
-                </div>
-              </a>
-            </div>
+            {% include "portfolio/_project_card.html" with project=project cat_name=category.name cat_color=category.color index=forloop.counter0 %}
           {% endfor %}
         </div>
-      </div>
+      </section>
     {% endif %}
   {% endfor %}
 
-  {% with uncats=projects %}
-  {% if uncats %}
-  <div class="category-section" data-projects="auto">
-    <div class="category-header">
-      <h2 class="category-title">{% trans "Autres projets" %}</h2>
-    </div>
-    <div class="row g-4">
-      {% for project in uncats %}{% if not project.category %}
-      <div class="col-md-6 col-lg-4">
-        <a href="{% url 'project_detail' project.pk %}" class="card-link">
-          <div class="project-card">
-            {% if project.is_research %}
-              <div class="research-badge">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-                {% trans "Recherche" %}
-              </div>
-            {% endif %}
-            <div class="pc-inner">
-              <div class="pc-body">
-                <div class="pc-index">// 0.{{ forloop.counter }}</div>
-                <h5 class="pc-title">{{ project.title }}</h5>
-                <p class="pc-text">{{ project.short_description }}</p>
-                <span class="pc-badge">{{ project.technologies }}</span>
-              </div>
-            </div>
-          </div>
-        </a>
-      </div>
-      {% endif %}{% endfor %}
-    </div>
-  </div>
-  {% endif %}
+  {# ── Projects with no category ── #}
+  {% with loose=projects|uncategorized %}
+    {% if loose %}
+      <section class="pf-section">
+        <header class="pf-section-head">
+          <span class="pf-swatch" style="--cat:#8C97A6"></span>
+          <h2 class="pf-section-title">{% trans "Autres projets" %}</h2>
+          <span class="pf-section-count">n = {{ loose|length }}</span>
+        </header>
+
+        <div class="pf-grid">
+          {% for project in loose %}
+            {% include "portfolio/_project_card.html" with project=project cat_name="Divers" cat_color="#8C97A6" index=forloop.counter0 %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
   {% endwith %}
 
 </div>
-{# END pf-main #}
-
-<aside class="pf-aside" style="flex:0 0 340px;width:340px;min-width:340px;max-width:340px;display:block">
-  <div class="terminal">
-    <div class="terminal-bar">
-      <span class="t-dot r"></span>
-      <span class="t-dot y"></span>
-      <span class="t-dot g"></span>
-      <span class="t-bar-label">nicodeme@ds-portfolio ~ </span>
-    </div>
-    <div class="terminal-body" id="term"></div>
-  </div>
-</aside>
-
-</div>
-{# END pf-cols #}
-</div>
-{# END pf-inner #}
-</div>
-{# END pf-page #}
-
-<script>
-(function(){
-  var term=document.getElementById('term');
-  var sections=Array.prototype.slice.call(document.querySelectorAll('.category-section'));
-  var S=window.Term?Term.load():{};S=S||{};
-  var booted=false;
-
-  function getCount(s){
-    var a=s.getAttribute('data-projects');
-    if(!a||a==='auto'||isNaN(parseInt(a)))return s.querySelectorAll('.project-card').length;
-    return parseInt(a);
-  }
-  var total=sections.reduce(function(acc,s){return acc+getCount(s);},0);
-
-  function revealAll(){
-    document.body.classList.remove('js-reveal');
-    sections.forEach(function(s){s.classList.add('visible');});
-  }
-  var failsafe=setTimeout(revealAll,6000);
-
-  try{
-    function el(cls,html){
-      var e=document.createElement('span');e.className='tl '+(cls||'');
-      e.innerHTML=html;term.appendChild(e);term.scrollTop=term.scrollHeight;return e;
-    }
-    function cmd(c,a){
-      return '<span class="t-prompt">~$</span> <span class="t-cmd">'+c+'</span>'
-           +(a?' <span class="t-arg">'+a+'</span>':'');
-    }
-    function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-    function type(cls,txt,spd){
-      return new Promise(function(res){
-        var e=el(cls,'');var i=0;
-        var iv=setInterval(function(){
-          e.textContent=txt.slice(0,++i);term.scrollTop=term.scrollHeight;
-          if(i>=txt.length){clearInterval(iv);res();}
-        },spd||12);
-      });
-    }
-    function cursor(){
-      var old=document.getElementById('t-cur');if(old)old.remove();
-      var c=document.createElement('span');c.className='t-cursor';c.id='t-cur';term.appendChild(c);
-    }
-    function persist(){
-      var lines=[];
-      Array.prototype.forEach.call(term.querySelectorAll('.tl'),function(n){
-        lines.push({html:n.innerHTML,cls:n.className.replace(/^tl\s*/,'')});
-      });
-      S.linesRaw=lines;S.booted=true;S.replay=false;
-      if(window.Term)Term.save(S);
-    }
-    function renderHistory(){(S.linesRaw||[]).forEach(function(l){el(l.cls,l.html);});}
-
-    /* Progress bar fetch */
-    function fetchSection(section){
-      var n=getCount(section);
-      var cat=section.querySelector('.category-title');
-      var name=cat?cat.textContent.trim():'projects';
-      el('',cmd('db.fetch','--cat="'+name+'"'));
-      return sleep(90).then(function(){
-        return new Promise(function(res){
-          var bar=el('t-out','');var filled=0,BARS=18;
-          var iv=setInterval(function(){
-            filled++;
-            var pct=Math.round(filled/BARS*100);
-            var s='';
-            for(var k=0;k<filled;k++)s+='\u2588';
-            for(var k=filled;k<BARS;k++)s+='\u2591';
-            bar.innerHTML='  <span style="color:var(--green);">['+s+']</span>'
-              +' <span style="color:var(--cyan);font-size:.6rem">'+pct+'%</span>';
-            term.scrollTop=term.scrollHeight;
-            if(filled>=BARS){clearInterval(iv);res();}
-          },24);
-        });
-      }).then(function(){
-        el('t-out t-ok','  \u2714  '+n+' project'+(n!==1?'s':'')+'  \u00b7  '+name);
-        section.classList.add('visible');
-        return sleep(80);
-      });
-    }
-
-    function fetchLoop(i,fast){
-      if(i>=sections.length)return Promise.resolve();
-      if(fast){
-        var n=getCount(sections[i]);
-        var cat=sections[i].querySelector('.category-title');
-        var name=cat?cat.textContent.trim():'projects';
-        el('t-out t-ok','  \u2714  '+n+' project'+(n!==1?'s':'')+'  \u00b7  '+name);
-        sections[i].classList.add('visible');
-        return sleep(40).then(function(){return fetchLoop(i+1,true);});
-      }
-      return fetchSection(sections[i])
-        .then(function(){return sleep(60);})
-        .then(function(){return fetchLoop(i+1,false);});
-    }
-
-    /* Boot */
-    function boot(){
-      return Promise.resolve()
-        .then(function(){el('',cmd('python3','-c "import portfolio; portfolio.run()"'));return sleep(240);})
-        .then(function(){return type('t-out','[ENV]  Python 3.11 | PyTorch 2.2 | scikit-learn 1.4',8);})
-        .then(function(){return sleep(80);})
-        .then(function(){el('',cmd('portfolio','fetch --all'));return sleep(120);})
-        .then(function(){return fetchLoop(0,false);})
-        .then(function(){return sleep(80);})
-        .then(function(){return type('t-out t-ok','[OK]  '+total+' projects indexed \u2713',10);})
-        .then(function(){persist();cursor();booted=true;clearTimeout(failsafe);startIdle();});
-    }
-
-    function reload(){
-      renderHistory();
-      el('',cmd('portfolio','reload --cache'));
-      return sleep(60)
-        .then(function(){el('t-out','[CACHE]  hit \u00b7 0.4ms');return sleep(40);})
-        .then(function(){return fetchLoop(0,true);})
-        .then(function(){return type('t-out t-ok','[OK]  ready \u2713',8);})
-        .then(function(){persist();cursor();booted=true;clearTimeout(failsafe);startIdle();});
-    }
-
-    /* ── Terminal hover: rotating sequences ── */
-    var termWrap=term.closest('.terminal');
-    if(termWrap){
-      var th={busy:false,idx:0,to:null};
-
-      var HSEQ=[
-        function(done){
-          if(th.busy)return done();th.busy=true;
-          sleep(160).then(function(){return type('t-out','[SYS]  1 client connected \u00b7 session active',7);})
-            .then(function(){cursor();th.busy=false;done();});
-        },
-        function(done){
-          if(th.busy)return done();th.busy=true;
-          el('',cmd('model.eval','--quick'));
-          sleep(200).then(function(){return type('t-out','  loss: 0.0312  acc: 0.913  \u0394: +0.8%',8);})
-            .then(function(){cursor();th.busy=false;done();});
-        },
-        function(done){
-          if(th.busy)return done();th.busy=true;
-          el('',cmd('git','status --short'));
-          sleep(170)
-            .then(function(){return type('t-out','  M  models/classifier.py',8);})
-            .then(function(){return type('t-out','  A  notebooks/attention_viz.ipynb',8);})
-            .then(function(){cursor();th.busy=false;done();});
-        },
-        function(done){
-          if(th.busy)return done();th.busy=true;
-          el('',cmd('ping','gpu.cluster.local -c 1'));
-          sleep(190).then(function(){return type('t-out','  64 bytes \u00b7 time=1.2ms \u00b7 TTL=64',8);})
-            .then(function(){cursor();th.busy=false;done();});
-        },
-        function(done){
-          if(th.busy)return done();th.busy=true;
-          el('',cmd('dataset','verify --checksum'));
-          sleep(180).then(function(){return type('t-out t-ok','  \u2714  all shards intact \u00b7 0 corrupted',8);})
-            .then(function(){cursor();th.busy=false;done();});
-        },
-      ];
-
-      termWrap.addEventListener('mouseenter',function(){
-        if(!booted)return;
-        clearTimeout(th.to);
-        th.to=setTimeout(function(){
-          HSEQ[th.idx % HSEQ.length](function(){});
-          th.idx++;
-        },450);
-      });
-      termWrap.addEventListener('mouseleave',function(){clearTimeout(th.to);});
-    }
-
-    /* ── Idle mode ── */
-    var idleTO=null,idleRunning=false,idleIdx=0;
-    var IDLE=[
-      function(){return type('t-out','[MON]  CPU 12%  \u00b7  RAM 1.4 GB  \u00b7  GPU idle',8);},
-      function(){return type('t-out','[DS]   last model: 2h ago  (acc=0.913)',8);},
-      function(){return type('t-out','[GIT]  main \u00b7 ahead 3 commits',8);},
-      function(){return type('t-out','[MON]  no anomalies detected',8);},
-      function(){return type('t-out','[DS]   dataset freshness: OK',8);},
-      function(){return type('t-out','[SYS]  uptime 4d 11h \u00b7 all services running',8);},
-    ];
-
-    function resetIdle(){
-      if(idleRunning)idleRunning=false;
-      clearTimeout(idleTO);idleTO=setTimeout(runIdle,14000);
-    }
-    function runIdle(){
-      if(!booted)return;
-      idleRunning=true;
-      IDLE[idleIdx%IDLE.length]().then(function(){
-        cursor();
-        if(idleRunning)idleTO=setTimeout(runIdle,8000);
-      });
-      idleIdx++;
-    }
-    function startIdle(){
-      idleTO=setTimeout(runIdle,14000);
-      ['mousemove','keydown','scroll','click'].forEach(function(ev){
-        window.addEventListener(ev,resetIdle,{passive:true});
-      });
-    }
-
-    /* Start */
-    document.body.classList.add('js-reveal');
-    if(S.booted&&S.replay){reload().catch(revealAll);}
-    else if(S.booted&&!S.replay){renderHistory();revealAll();cursor();booted=true;clearTimeout(failsafe);startIdle();}
-    else{boot().catch(revealAll);}
-
-  }catch(err){revealAll();clearTimeout(failsafe);}
-})();
-</script>
-
 {% endblock %}

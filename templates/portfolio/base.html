@@ -1,333 +1,432 @@
 {% load static %}
 {% load i18n %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}">
+<html lang="{{ LANGUAGE_CODE }}" class="no-js">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Portfolio{% endblock %}</title>
+  <title>{% block title %}Corentin Nicodème{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{% trans "Portfolio de projets en data science, apprentissage automatique et recherche." %}{% endblock %}">
+  <meta name="color-scheme" content="light">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style_portfolio.css' %}?v=5">
-  <script>
-  window.Term=(function(){
-    var K='pf_term_v3';
-    function load(){try{return JSON.parse(sessionStorage.getItem(K))||{};}catch(e){return{};}}
-    function save(s){try{sessionStorage.setItem(K,JSON.stringify(s));}catch(e){}}
-    return{load:load,save:save};
-  })();
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style_portfolio.css' %}?v=1">
+
+  <script>document.documentElement.classList.remove('no-js');</script>
 </head>
 <body>
 
-<canvas id="data-canvas"></canvas>
+<a class="pf-skip" href="#pf-main">{% trans "Aller au contenu" %}</a>
 
-<div class="pf-navbar">
-  <div class="pf-navbar-inner">
-    <a class="pf-brand" href="{% url 'project_list' %}"> &nbsp;Portofio Corentin Nicodème</a>
+<header class="pf-header">
+  <div class="pf-header-inner">
+    <a class="pf-wordmark" href="{% url 'project_list' %}">
+      python3 portfolio.py<span class="pf-caret" aria-hidden="true"></span>
+    </a>
 
-    {# Language switcher — flag style, no translated text #}
     {% get_current_language as CUR_LANG %}
-    <div class="pf-lang-form">
-      <form action="{% url 'set_language' %}" method="post" id="lang-form-fr" style="display:inline">
+    <nav class="pf-lang" aria-label="{% trans 'Langue' %}">
+      <form action="{% url 'set_language' %}" method="post">
         {% csrf_token %}
-        <input name="next" type="hidden" value="{{ request.path }}">
-        <input name="language" type="hidden" value="fr">
-        <button type="submit" class="pf-flag-btn {% if CUR_LANG == 'fr' %}active{% endif %}"
-                title="Français" onclick="logLang('fr')">
-          <span class="pf-flag">🇫🇷</span>
-          <span class="pf-lang-code">FR</span>
-        </button>
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <input type="hidden" name="language" value="fr">
+        <button type="submit" class="pf-lang-btn"
+                {% if CUR_LANG == 'fr' %}aria-current="true"{% endif %}>fr</button>
       </form>
-      <form action="{% url 'set_language' %}" method="post" id="lang-form-en" style="display:inline">
+      <span class="pf-lang-sep" aria-hidden="true">/</span>
+      <form action="{% url 'set_language' %}" method="post">
         {% csrf_token %}
-        <input name="next" type="hidden" value="{{ request.path }}">
-        <input name="language" type="hidden" value="en">
-        <button type="submit" class="pf-flag-btn {% if CUR_LANG == 'en' %}active{% endif %}"
-                title="English" onclick="logLang('en')">
-          <span class="pf-flag">🇬🇧</span>
-          <span class="pf-lang-code">EN</span>
-        </button>
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <input type="hidden" name="language" value="en">
+        <button type="submit" class="pf-lang-btn"
+                {% if CUR_LANG == 'en' %}aria-current="true"{% endif %}>en</button>
       </form>
-    </div>
+    </nav>
   </div>
+</header>
+
+<main id="pf-main">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="pf-footer">
+  <div class="pf-footer-inner">
+    <span>Corentin Nicodème — {% now "Y" %}</span>
+    <span>{% trans "Data science · Apprentissage automatique · Recherche" %}</span>
+  </div>
+</footer>
+
+<!-- Lightbox -->
+<div class="pf-lightbox" id="pf-lightbox" role="dialog" aria-modal="true" aria-label="{% trans 'Image agrandie' %}">
+  <button class="pf-lightbox-close" type="button" aria-label="{% trans 'Fermer' %}">[esc]</button>
+  <img src="" alt="">
+  <p class="pf-lightbox-cap"></p>
 </div>
 
-{% block content %}{% endblock %}
-
 <script>
-function logLang(t){
-  try{var s=Term.load();if(!s.linesRaw)s.linesRaw=[];
-    s.linesRaw.push({cls:'',html:'<span class="t-prompt">~$</span> <span class="t-cmd">setlocale</span> <span class="t-arg">--lang '+t+'</span>'});
-    s.replay=true;s.booted=true;Term.save(s);}catch(e){}
-}
+(function () {
+  'use strict';
 
-/* ── Interactive neural canvas ── */
-(function(){
-  try{
-    var cv=document.getElementById('data-canvas');
-    if(!cv)return;
-    var ctx=cv.getContext('2d'),W,H;
-    var mouse={x:-1000,y:-1000};
+  var REDUCED = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ── Config ── */
-    var NODE_COUNT   = 55;
-    var LABEL_COUNT  = 32;
-    var CONNECT_DIST = 160;
-    var MOUSE_DIST   = 140;
-    var MOUSE_FORCE  = 0.012;
+  /* ════════════════════════════════════════════════
+     Scroll reveal
+  ════════════════════════════════════════════════ */
+  (function () {
+    var items = document.querySelectorAll('.pf-reveal');
+    if (!items.length) return;
 
-    /* DS labels floating */
-    var LABELS=['σ','∇','μ','Σ','λ','∂','∫','r²','F1','AUC',
-                'loss','acc','relu','softmax','dropout',
-                '.fit()','predict','epoch','batch','lr',
-                '01101','10010','P(x)','argmax','tanh'];
-
-    var CL=['rgba(0,245,160,','rgba(0,212,255,','rgba(167,139,250,'];
-
-    /* Nodes: neural network nodes */
-    var nodes=[];
-    var labels=[];
-
-    function rnd(a,b){return a+Math.random()*(b-a);}
-
-    function resize(){
-      W=cv.width=innerWidth;
-      H=cv.height=innerHeight;
+    if (REDUCED || !('IntersectionObserver' in window)) {
+      items.forEach(function (el) { el.classList.add('is-in'); });
+      return;
     }
 
-    function mkNode(){
-      return{
-        x:rnd(0,W), y:rnd(0,H),
-        vx:rnd(-0.3,0.3), vy:rnd(-0.3,0.3),
-        r:rnd(1.5,3.5),
-        color:CL[~~(Math.random()*3)],
-        alpha:rnd(0.15,0.45),
-        pulse:Math.random()*6.28,
-      };
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-in');
+        io.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: .06 });
+
+    items.forEach(function (el) { io.observe(el); });
+  })();
+
+
+  /* ════════════════════════════════════════════════
+     Lightbox for figures
+  ════════════════════════════════════════════════ */
+  (function () {
+    var box = document.getElementById('pf-lightbox');
+    if (!box) return;
+
+    var img   = box.querySelector('img');
+    var cap   = box.querySelector('.pf-lightbox-cap');
+    var close = box.querySelector('.pf-lightbox-close');
+    var lastFocus = null;
+
+    function open(src, alt, caption) {
+      lastFocus = document.activeElement;
+      img.src = src;
+      img.alt = alt || '';
+      cap.textContent = caption || '';
+      box.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      close.focus();
     }
 
-    function mkLabel(){
-      return{
-        x:rnd(0,W), y:rnd(0,H),
-        vx:rnd(-0.15,0.15), vy:rnd(-0.18,0.05),
-        text:LABELS[~~(Math.random()*LABELS.length)],
-        color:CL[~~(Math.random()*3)],
-        alpha:rnd(0.04,0.14),
-        fs:rnd(9,14),
-        life:0,max:rnd(300,700),
-      };
+    function shut() {
+      box.classList.remove('is-open');
+      document.body.style.overflow = '';
+      img.src = '';
+      if (lastFocus) lastFocus.focus();
     }
 
-    function init(){
-      resize();
-      nodes=[]; labels=[];
-      for(var i=0;i<NODE_COUNT;i++) nodes.push(mkNode());
-      for(var j=0;j<LABEL_COUNT;j++) labels.push(mkLabel());
+    document.addEventListener('click', function (e) {
+      var trigger = e.target.closest && e.target.closest('[data-lightbox]');
+      if (!trigger) return;
+      e.preventDefault();
+      var picture = trigger.querySelector('img');
+      if (!picture) return;
+      open(picture.currentSrc || picture.src, picture.alt, trigger.getAttribute('data-caption'));
+    });
+
+    box.addEventListener('click', function (e) {
+      if (e.target === box || e.target === close || e.target === cap) shut();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && box.classList.contains('is-open')) shut();
+    });
+  })();
+
+
+  /* ════════════════════════════════════════════════
+     Figure 1 — project timeline
+
+     Reads the project cards already in the DOM, so no extra
+     data is needed from the view. Each card carries
+     data-date / data-cat / data-color / data-title.
+
+     x = the project's actual date on a continuous time axis
+         (not binned by year, so points rarely collide)
+     y = category band, which maps onto the page's sections
+
+     A rug along the axis shows every project's date, so uneven
+     activity across the years reads as density rather than as
+     gaps in a grid.
+  ════════════════════════════════════════════════ */
+  (function () {
+    var host = document.getElementById('pf-plot-wrap');
+    if (!host) return;
+
+    var figure = host.closest('.pf-figure');
+    var NS  = 'http://www.w3.org/2000/svg';
+    var tip = host.querySelector('.pf-tip');
+    var drawn = false;
+
+    var MONTHS_FR = ['janv.','févr.','mars','avr.','mai','juin',
+                     'juil.','août','sept.','oct.','nov.','déc.'];
+    var MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun',
+                     'Jul','Aug','Sep','Oct','Nov','Dec'];
+    var MONTHS = (document.documentElement.lang || 'fr').indexOf('en') === 0
+      ? MONTHS_EN : MONTHS_FR;
+
+    function fmtDate(d) {
+      return MONTHS[d.getMonth()] + ' ' + d.getFullYear();
     }
 
-    function frame(){
-      /* Subtle dark gradient background — replaces static bg-image */
-      ctx.clearRect(0,0,W,H);
+    function collect() {
+      var out = [];
+      document.querySelectorAll('[data-plot-point]').forEach(function (card) {
+        var raw = card.getAttribute('data-date');
+        var t = raw ? Date.parse(raw + 'T00:00:00') : NaN;
+        if (isNaN(t)) return;
+        out.push({
+          t:     t,
+          cat:   card.getAttribute('data-cat') || '—',
+          color: card.getAttribute('data-color') || '#C0246A',
+          title: card.getAttribute('data-title') || '',
+          card:  card
+        });
+      });
+      return out;
+    }
 
-      /* Background: deep space gradient */
-      var grd=ctx.createRadialGradient(W*0.15,H*0.15,0,W*0.15,H*0.15,W*0.55);
-      grd.addColorStop(0,'rgba(0,245,160,0.028)');
-      grd.addColorStop(1,'rgba(3,7,18,0)');
-      ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
-      var grd2=ctx.createRadialGradient(W*0.85,H*0.85,0,W*0.85,H*0.85,W*0.55);
-      grd2.addColorStop(0,'rgba(0,212,255,0.022)');
-      grd2.addColorStop(1,'rgba(3,7,18,0)');
-      ctx.fillStyle=grd2; ctx.fillRect(0,0,W,H);
+    function el(name, attrs) {
+      var n = document.createElementNS(NS, name);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    }
 
-      /* Dot grid */
-      ctx.fillStyle='rgba(0,245,160,0.045)';
-      var gs=30;
-      for(var gx=0;gx<W;gx+=gs)for(var gy=0;gy<H;gy+=gs){
-        ctx.beginPath();ctx.arc(gx,gy,0.7,0,6.28);ctx.fill();
-      }
+    function draw() {
+      var data = collect();
+      if (data.length < 2) { if (figure) figure.style.display = 'none'; return; }
 
-      /* Update + draw nodes */
-      for(var i=0;i<nodes.length;i++){
-        var n=nodes[i];
-        n.x+=n.vx; n.y+=n.vy;
-        /* Soft wall bounce */
-        if(n.x<0||n.x>W) n.vx*=-1;
-        if(n.y<0||n.y>H) n.vy*=-1;
-        /* Mouse repulsion */
-        var mdx=n.x-mouse.x, mdy=n.y-mouse.y;
-        var md=Math.sqrt(mdx*mdx+mdy*mdy);
-        if(md<MOUSE_DIST&&md>0){
-          var force=MOUSE_FORCE*(1-md/MOUSE_DIST);
-          n.vx+=mdx/md*force;
-          n.vy+=mdy/md*force;
+      var old = host.querySelector('svg');
+      if (old) old.remove();
+
+      /* Category bands, in the order the sections appear */
+      var cats = [];
+      data.forEach(function (d) { if (cats.indexOf(d.cat) === -1) cats.push(d.cat); });
+
+      var times = data.map(function (d) { return d.t; });
+      var tMin = Math.min.apply(null, times);
+      var tMax = Math.max.apply(null, times);
+      var pad  = Math.max((tMax - tMin) * 0.06, 45 * 864e5);   /* ≥ ~6 weeks */
+      tMin -= pad;
+      tMax += pad;
+
+      var W    = host.clientWidth || 900;
+      var padL = 146, padR = 30, padT = 22, padB = 46;
+      var bandH = 36;
+      var H = padT + padB + cats.length * bandH;
+      var plotW = W - padL - padR;
+      var baseY = H - padB;
+
+      var svg = el('svg', {
+        'class': 'pf-plot',
+        viewBox: '0 0 ' + W + ' ' + H,
+        width: '100%', height: H,
+        role: 'img',
+        'aria-label': data.length + ' projets, par date et par domaine'
+      });
+
+      function X(t) { return padL + (t - tMin) / (tMax - tMin) * plotW; }
+      function Y(cat) { return padT + cats.indexOf(cat) * bandH + bandH / 2; }
+
+      /* ── Year gridlines: only the years actually spanned ── */
+      var yStart = new Date(tMin).getFullYear();
+      var yEnd   = new Date(tMax).getFullYear();
+      var span   = yEnd - yStart;
+      var every  = span > 12 ? 3 : (span > 7 ? 2 : 1);
+
+      for (var yr = yStart; yr <= yEnd; yr++) {
+        var jan = Date.parse(yr + '-01-01T00:00:00');
+        if (jan < tMin || jan > tMax) continue;
+        var gx = X(jan);
+        svg.appendChild(el('line', {
+          'class': 'pf-gridline-v', x1: gx, x2: gx, y1: padT - 6, y2: baseY
+        }));
+        if ((yr - yStart) % every === 0) {
+          var tx = el('text', { 'class': 'pf-tick pf-tick-x', x: gx, y: baseY + 16 });
+          tx.textContent = yr;
+          svg.appendChild(tx);
         }
-        /* Damping */
-        n.vx*=0.995; n.vy*=0.995;
-        n.pulse+=0.02;
-        /* Draw node */
-        var pr=n.r*(1+Math.sin(n.pulse)*0.25);
-        ctx.beginPath(); ctx.arc(n.x,n.y,pr,0,6.28);
-        ctx.fillStyle=n.color+n.alpha+')'; ctx.fill();
       }
 
-      /* Draw edges between nearby nodes */
-      for(var i=0;i<nodes.length;i++){
-        for(var k=i+1;k<nodes.length;k++){
-          var dx=nodes[i].x-nodes[k].x, dy=nodes[i].y-nodes[k].y;
-          var d=Math.sqrt(dx*dx+dy*dy);
-          if(d<CONNECT_DIST){
-            /* Mouse proximity brightens edge */
-            var edgeCx=(nodes[i].x+nodes[k].x)/2, edgeCy=(nodes[i].y+nodes[k].y)/2;
-            var mEdgeDx=edgeCx-mouse.x, mEdgeDy=edgeCy-mouse.y;
-            var mEdgeDist=Math.sqrt(mEdgeDx*mEdgeDx+mEdgeDy*mEdgeDy);
-            var bright=mEdgeDist<200?0.04+0.1*(1-mEdgeDist/200):0.04;
-            var alpha=bright*(1-d/CONNECT_DIST);
-            ctx.beginPath();
-            ctx.moveTo(nodes[i].x,nodes[i].y);
-            ctx.lineTo(nodes[k].x,nodes[k].y);
-            ctx.strokeStyle='rgba(0,245,160,'+alpha+')';
-            ctx.lineWidth=0.6; ctx.stroke();
+      /* ── Category bands ── */
+      cats.forEach(function (cat) {
+        var yy = Y(cat);
+        svg.appendChild(el('line', {
+          'class': 'pf-gridline', x1: padL, x2: W - padR, y1: yy, y2: yy
+        }));
+        var label = el('text', { 'class': 'pf-tick pf-tick-y', x: padL - 12, y: yy + 3.5 });
+        label.textContent = cat.length > 19 ? cat.slice(0, 18) + '…' : cat;
+        svg.appendChild(label);
+      });
+
+      /* ── Axes ── */
+      svg.appendChild(el('line', {
+        'class': 'pf-axis', x1: padL, x2: padL, y1: padT - 6, y2: baseY
+      }));
+      svg.appendChild(el('line', {
+        'class': 'pf-axis', x1: padL, x2: W - padR, y1: baseY, y2: baseY
+      }));
+
+      var axisTitle = el('text', {
+        'class': 'pf-axis-title', x: W - padR, y: H - 8, 'text-anchor': 'end'
+      });
+      axisTitle.textContent = 'date';
+      svg.appendChild(axisTitle);
+
+      /* ── Crosshair, drawn under the points ── */
+      var cross = el('line', { 'class': 'pf-crosshair', x1: 0, x2: 0, y1: padT - 6, y2: baseY });
+      svg.appendChild(cross);
+
+      /* ── Rug: one tick per project on the time axis ── */
+      var rugs = {};
+      data.forEach(function (d) {
+        var rx = X(d.t);
+        var r = el('line', {
+          'class': 'pf-rug', x1: rx, x2: rx, y1: baseY + 1, y2: baseY + 7
+        });
+        rugs[d.t + ':' + d.cat] = r;
+        svg.appendChild(r);
+      });
+
+      /* ── Points ── */
+      var sorted = data.slice().sort(function (a, b) { return a.t - b.t; });
+      var placed = [];   /* {cat, x, offset} — for collision nudging */
+
+      sorted.forEach(function (d, i) {
+        var cx = X(d.t);
+
+        /* Nudge vertically only if a same-row point is very close */
+        var offset = 0;
+        var neighbours = placed.filter(function (q) {
+          return q.cat === d.cat && Math.abs(q.x - cx) < 15;
+        });
+        if (neighbours.length) {
+          var used = neighbours.map(function (q) { return q.offset; });
+          var candidates = [8, -8, 16, -16];
+          for (var c = 0; c < candidates.length; c++) {
+            if (used.indexOf(candidates[c]) === -1) { offset = candidates[c]; break; }
           }
         }
-      }
+        placed.push({ cat: d.cat, x: cx, offset: offset });
 
-      /* Floating DS labels */
-      for(var j=labels.length-1;j>=0;j--){
-        var lb=labels[j];
-        lb.x+=lb.vx; lb.y+=lb.vy; lb.life++;
-        /* Fade in/out */
-        var pr2=lb.life/lb.max;
-        var fa=pr2<0.1?(pr2/0.1)*lb.alpha:pr2>0.85?((1-pr2)/0.15)*lb.alpha:lb.alpha;
-        ctx.font=lb.fs+"px 'JetBrains Mono',monospace";
-        ctx.fillStyle=lb.color+fa+')';
-        ctx.fillText(lb.text,lb.x,lb.y);
-        if(lb.life>=lb.max||lb.y<-20||lb.x<-60||lb.x>W+60){
-          labels[j]=mkLabel();
-          labels[j].y=H+10; /* re-enter from bottom */
-        }
-      }
+        var cy = Y(d.cat) + offset;
+        var origin = cx + 'px ' + cy + 'px';
 
-      requestAnimationFrame(frame);
-    }
-
-    /* Mouse tracking */
-    addEventListener('mousemove',function(e){mouse.x=e.clientX;mouse.y=e.clientY;});
-    addEventListener('mouseleave',function(){mouse.x=-1000;mouse.y=-1000;});
-    addEventListener('resize',function(){
-      resize();
-      /* Reposition nodes within new bounds */
-      nodes.forEach(function(n){n.x=Math.min(n.x,W);n.y=Math.min(n.y,H);});
-    });
-
-    /* Card cursor-glow */
-    addEventListener('mousemove',function(e){
-      var card=e.target.closest&&e.target.closest('.project-card');
-      if(!card)return;
-      var r=card.getBoundingClientRect();
-      card.style.setProperty('--mx',(e.clientX-r.left)+'px');
-      card.style.setProperty('--my',(e.clientY-r.top)+'px');
-    });
-
-    init(); frame();
-  }catch(e){
-    /* Canvas optional */
-    document.body.style.background='#030712';
-  }
-})();
-
-
-/* ── Institution sidebar ── */
-(function(){
-  try {
-    function buildSidebar(){
-      /* Create sidebar DOM once */
-      var sb = document.getElementById('inst-sidebar');
-      if(!sb){
-        sb = document.createElement('div');
-        sb.id = 'inst-sidebar';
-        sb.innerHTML =
-          '<div id="inst-sidebar-inner">'
-          +'<img id="inst-sidebar-logo" src="" alt="">'
-          +'<div id="inst-sidebar-name"></div>'
-          +'</div>'
-          +'<div id="inst-sidebar-corner"></div>';
-        document.body.appendChild(sb);
-      }
-
-      var sbLogo  = document.getElementById('inst-sidebar-logo');
-      var sbName  = document.getElementById('inst-sidebar-name');
-      var scanTO  = null;
-      var hideTO  = null;
-      var current = null;
-
-      function show(img){
-        if(current === img) return;
-        current = img;
-
-        clearTimeout(hideTO);
-        sb.classList.remove('scanning');
-
-        /* Update content */
-        sbLogo.src = img.src;
-        sbLogo.alt = img.alt;
-        sbName.textContent = img.alt;
-
-        /* Activate */
-        sb.classList.add('active');
-
-        /* Trigger scan animation */
-        void sb.offsetWidth; /* reflow */
-        sb.classList.add('scanning');
-        clearTimeout(scanTO);
-        scanTO = setTimeout(function(){
-          sb.classList.remove('scanning');
-        }, 700);
-      }
-
-      function hide(){
-        hideTO = setTimeout(function(){
-          sb.classList.remove('active','scanning');
-          current = null;
-        }, 180);
-      }
-
-      /* Attach to every project card that has a logo */
-      function attachEvents(){
-        var logos = document.querySelectorAll('.institution-logo');
-        logos.forEach(function(img){
-          var card = img.closest('.project-card');
-          if(!card || card._instAttached) return;
-          card._instAttached = true;
-          card.addEventListener('mouseenter', function(){ show(img); });
-          card.addEventListener('mouseleave', hide);
+        var ring = el('circle', {
+          'class': 'pf-point-ring', cx: cx, cy: cy, r: 10, stroke: d.color
         });
-      }
+        var dot = el('circle', {
+          'class': 'pf-point', cx: cx, cy: cy, r: 5.5,
+          fill: d.color, 'fill-opacity': .82,
+          stroke: '#fff', 'stroke-width': 1.5
+        });
+        ring.style.setProperty('--d', (i * 26) + 'ms');
+        dot.style.setProperty('--d', (i * 26) + 'ms');
+        ring.style.transformOrigin = origin;
+        dot.style.transformOrigin  = origin;
 
-      if(document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', attachEvents);
-      } else {
-        attachEvents();
-      }
+        var hit = el('circle', { 'class': 'pf-point-hit', cx: cx, cy: cy, r: 14 });
+        var rug = rugs[d.t + ':' + d.cat];
 
-      /* Re-attach after terminal reveals sections */
-      var obs = new MutationObserver(attachEvents);
-      obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+        function on() {
+          dot.classList.add('is-active');
+          ring.classList.add('is-active');
+          if (rug) rug.classList.add('is-active');
+          d.card.querySelector('.pf-card').classList.add('is-linked');
+
+          cross.setAttribute('x1', cx);
+          cross.setAttribute('x2', cx);
+          cross.setAttribute('y2', cy);
+          cross.classList.add('is-on');
+
+          tip.innerHTML = '';
+          var b = document.createElement('b');
+          b.textContent = d.title;
+          tip.appendChild(b);
+          var s = document.createElement('span');
+          s.textContent = d.cat + ' · ' + fmtDate(new Date(d.t));
+          tip.appendChild(s);
+
+          /* Show first so it can be measured, then clamp inside the panel */
+          tip.classList.add('is-on');
+          var half = tip.offsetWidth / 2;
+          var left = Math.min(Math.max(cx, half + 8), W - half - 8);
+          tip.style.left = left + 'px';
+          tip.style.top  = cy + 'px';
+          /* Flip below the point when there is no room above */
+          tip.classList.toggle('is-below', cy - tip.offsetHeight - 12 < 0);
+        }
+
+        function off() {
+          dot.classList.remove('is-active');
+          ring.classList.remove('is-active');
+          if (rug) rug.classList.remove('is-active');
+          d.card.querySelector('.pf-card').classList.remove('is-linked');
+          cross.classList.remove('is-on');
+          tip.classList.remove('is-on');
+        }
+
+        hit.addEventListener('mouseenter', on);
+        hit.addEventListener('mouseleave', off);
+        hit.addEventListener('click', function () {
+          d.card.scrollIntoView({
+            behavior: REDUCED ? 'auto' : 'smooth',
+            block: 'center'
+          });
+          var panel = d.card.querySelector('.pf-card');
+          panel.classList.remove('is-flash');
+          void panel.offsetWidth;
+          panel.classList.add('is-flash');
+          setTimeout(function () { panel.classList.remove('is-flash'); }, 1200);
+        });
+
+        /* Card → point, the reverse link */
+        d.card.addEventListener('mouseenter', function () {
+          dot.classList.add('is-active');
+          ring.classList.add('is-active');
+          if (rug) rug.classList.add('is-active');
+        });
+        d.card.addEventListener('mouseleave', function () {
+          dot.classList.remove('is-active');
+          ring.classList.remove('is-active');
+          if (rug) rug.classList.remove('is-active');
+        });
+
+        svg.appendChild(ring);
+        svg.appendChild(dot);
+        svg.appendChild(hit);
+      });
+
+      host.insertBefore(svg, tip);
+
+      if (!drawn && !REDUCED) {
+        svg.classList.add('is-animating');
+        setTimeout(function () { svg.classList.remove('is-animating'); },
+                   400 + sorted.length * 26);
+      }
+      drawn = true;
     }
 
-    buildSidebar();
-  } catch(e){}
-})();
+    try { draw(); } catch (e) { if (figure) figure.style.display = 'none'; }
 
-/* Nav link tracking */
-(function(){try{
-  var links=document.querySelectorAll('a[href]');
-  for(var i=0;i<links.length;i++){(function(a){
-    if(a.hostname===location.hostname&&!a.target)
-      a.addEventListener('click',function(){var s=Term.load();s.replay=true;Term.save(s);});
-  })(links[i]);}
-}catch(e){}})();
+    var timer = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { try { draw(); } catch (e) {} }, 180);
+    }, { passive: true });
+  })();
+
+})();
 </script>
 </body>
 </html>
