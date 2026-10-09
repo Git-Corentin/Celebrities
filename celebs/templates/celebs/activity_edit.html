@@ -1,0 +1,20 @@
+{% extends "celebs/base.html" %}
+{% block title %}Modifier {{ activity.name }}{% endblock %}
+{% block page_class %}page-form{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'activity_list' %}">Retour aux activités</a>
+<h1>Modifier l'activité {{ activity.name }}</h1>
+<form method="post" class="editor">
+  {% csrf_token %}
+  <section class="editor-section">
+    <div class="form-grid">
+      <div class="field"><label for="id_name">Nom</label>{{ form.name }}{{ form.name.errors }}</div>
+      <div class="field"><label for="id_category">Secteur</label>{{ form.category }}</div>
+    </div>
+  </section>
+  <div class="editor-actions">
+    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+    <a class="btn btn-quiet" href="{% url 'activity_list' %}">Annuler</a>
+  </div>
+</form>
+{% endblock %}

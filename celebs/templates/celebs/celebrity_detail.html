@@ -1,0 +1,135 @@
+{% extends "celebs/base.html" %}
+{% load celebs_tags %}
+
+{% block title %}{{ celebrity.name }}{% endblock %}
+{% block page_class %}page-detail{% endblock %}
+
+{% block content %}
+<a class="back" href="{% url 'celebrity_list' %}" data-back>Retour à la liste</a>
+
+<article class="profile">
+  <div class="profile-photo">
+    {% if celebrity.image %}
+      <img src="{{ celebrity.image.url }}" alt="Photo de {{ celebrity.name }}">
+    {% else %}
+      <span class="initials">{{ celebrity.initials }}</span>
+    {% endif %}
+  </div>
+
+  <div class="profile-body">
+    <h1>{{ celebrity.name }}</h1>
+    <p class="profile-acts">
+      {% for a in celebrity.activities.all %}<a class="act" href="{% url 'celebrity_list' %}?act={{ a.id }}">{{ a.name }}</a>{% empty %}
+        <span class="muted">Activité non renseignée</span>
+      {% endfor %}
+    </p>
+
+    <dl class="facts">
+      <div>
+        <dt>Rencontres</dt>
+        <dd>{{ sightings|length }}</dd>
+      </div>
+      <div>
+        <dt>Vues Wikipédia, 60 jours</dt>
+        <dd>
+          {% if celebrity.popularity_updated_at %}
+            {{ celebrity.popularity_score|floatformat:"0g" }}
+            <small>{{ celebrity.views_fr|floatformat:"0g" }} en français, {{ celebrity.views_en|floatformat:"0g" }} en anglais</small>
+          {% elif celebrity.popularity_score %}
+            {{ celebrity.popularity_score|floatformat:"0g" }}
+            <small>ancien calcul, à actualiser</small>
+          {% else %}
+            <span class="muted">Pas encore calculées</span>
+          {% endif %}
+        </dd>
+      </div>
+      {% if celebrity.wikipedia_url %}
+      <div>
+        <dt>Wikipédia</dt>
+        <dd>
+          {% if celebrity.wiki_title_fr %}<a href="https://fr.wikipedia.org/wiki/{{ celebrity.wiki_title_fr|urlencode }}" rel="noopener" target="_blank">Article français</a>{% endif %}
+          {% if celebrity.wiki_title_en %}<a href="https://en.wikipedia.org/wiki/{{ celebrity.wiki_title_en|urlencode }}" rel="noopener" target="_blank">Article anglais</a>{% endif %}
+        </dd>
+      </div>
+      {% endif %}
+    </dl>
+
+    {% if celebrity.popularity_updated_at %}
+      <p class="fine">Popularité calculée le {{ celebrity.popularity_updated_at|date:"j F Y à H:i" }}.</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+      <div class="actions">
+        <a class="btn" href="{% url 'celebrity_edit' celebrity.id %}">Modifier la fiche</a>
+        <form method="post" action="{% url 'update_popularity' celebrity.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-quiet" data-busy="Calcul en cours…">Actualiser la popularité</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</article>
+
+<section class="encounters">
+  <h2>Rencontres</h2>
+
+  {% if sightings %}
+    <ol class="timeline">
+      {% for s in sightings %}
+        <li>
+          <div class="tl-date">{{ s.date_seen|date:"j F Y"|default:"Date inconnue" }}</div>
+          <div class="tl-body">
+            <p class="tl-place">
+              {% if s.location %}<a href="{% url 'celebrity_list' %}?loc={{ s.location|urlencode }}">{{ s.location }}</a>{% else %}<span class="muted">Lieu inconnu</span>{% endif %}
+            </p>
+            {% if s.notes %}<p class="tl-notes">{{ s.notes|linebreaksbr }}</p>{% endif %}
+            {% if user.is_authenticated %}
+              <div class="tl-actions">
+                <a href="{% url 'edit_celebrity_sighting' s.id %}">Modifier</a>
+                <form method="post" action="{% url 'delete_celebrity_sighting' s.id %}" data-confirm="Supprimer cette rencontre ?">
+                  {% csrf_token %}
+                  <button type="submit" class="link-danger">Supprimer</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="muted">Aucune rencontre notée pour l'instant.</p>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+    <details class="add-sighting" {% if not sightings %}open{% endif %}>
+      <summary class="btn btn-quiet">Ajouter une rencontre</summary>
+      <form method="post" action="{% url 'add_sighting' celebrity.id %}" class="form-grid">
+        {% csrf_token %}
+        <div class="field">
+          <label for="id_date_seen">Date</label>
+          {{ sighting_form.date_seen }}
+        </div>
+        <div class="field">
+          <label for="id_location">Lieu</label>
+          {{ sighting_form.location }}
+        </div>
+        <div class="field field-wide">
+          <label for="id_notes">Notes</label>
+          {{ sighting_form.notes }}
+        </div>
+        <datalist id="known-locations">{% for loc in locations %}<option value="{{ loc }}">{% endfor %}</datalist>
+        <div class="field-wide"><button type="submit" class="btn btn-primary">Enregistrer la rencontre</button></div>
+      </form>
+    </details>
+  {% endif %}
+</section>
+
+{% if user.is_authenticated %}
+<section class="danger-zone">
+  <form method="post" action="{% url 'celebrity_delete' celebrity.id %}" data-confirm="Supprimer définitivement {{ celebrity.name }} et ses {{ sightings|length }} rencontre(s) ?">
+    {% csrf_token %}
+    <button type="submit" class="link-danger">Supprimer {{ celebrity.name }} du carnet</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

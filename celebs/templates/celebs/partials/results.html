@@ -1,0 +1,156 @@
+{% load celebs_tags %}
+<div class="toolbar">
+  <p class="result-count">
+    <strong>{{ result_count }}</strong> résultat{{ result_count|pluralize }}
+    {% if p.active_count %}<a href="{% url 'celebrity_list' %}" class="link-quiet" data-reset>effacer les filtres</a>{% endif %}
+  </p>
+  <div class="toolbar-controls">
+    <label class="inline-select">
+      <span>Trier par</span>
+      <select data-param="sort">
+        {% for value, label in sort_options %}
+          <option value="{{ value }}" {% if p.sort_param == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="segmented" role="group" aria-label="Affichage">
+      <a href="{% qs view='table' page='' %}" data-param="view" data-value="table" {% if p.view == 'table' %}aria-current="true"{% endif %}>Liste</a>
+      <a href="{% qs view='grid' page='' %}" data-param="view" data-value="grid" {% if p.view == 'grid' %}aria-current="true"{% endif %}>Photos</a>
+    </div>
+    {% if user.is_authenticated and result_count %}
+      <button type="button" class="btn btn-quiet btn-small" data-update-popularity data-url="{% url 'update_popularity_batch' %}">
+        Actualiser la popularité ({{ result_count }})
+      </button>
+    {% endif %}
+  </div>
+</div>
+
+{% if not celebrities %}
+  <div class="empty">
+    {% if p.active_count %}
+      <p>Personne ne correspond à ces filtres.</p>
+      <a class="btn btn-quiet" href="{% url 'celebrity_list' %}" data-reset>Effacer les filtres</a>
+    {% else %}
+      <p>Le carnet est vide pour l'instant.</p>
+      {% if user.is_authenticated %}<a class="btn btn-primary" href="{% url 'add_celebrity' %}">Noter une première rencontre</a>{% endif %}
+    {% endif %}
+  </div>
+{% elif p.view == 'grid' %}
+  <ul class="grid">
+    {% for c in celebrities %}
+      <li class="card" data-id="{{ c.id }}">
+        <a href="{{ c.get_absolute_url }}" class="card-link">
+          <span class="card-photo">
+            {% if c.avatar_url %}
+              <img src="{{ c.avatar_url }}" alt="" loading="lazy" width="240" height="240">
+            {% else %}
+              <span class="initials">{{ c.initials }}</span>
+            {% endif %}
+          </span>
+          <span class="card-name">{{ c.name }}</span>
+        </a>
+        <span class="card-meta">
+          {% for a in c.activities.all %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% empty %}Activité non renseignée{% endfor %}
+        </span>
+        <span class="card-meta">{{ c.n_sightings }} rencontre{{ c.n_sightings|pluralize }}{% if c.last_seen %}, la dernière en {{ c.last_seen|date:"F Y" }}{% endif %}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="table-scroll">
+    <table class="ledger">
+      <thead>
+        <tr>
+          {% with cur=p.sort desc=p.desc %}
+          <th scope="col" class="col-name">
+            <a href="{% if cur == 'name' and not desc %}{% qs sort='-name' page='' %}{% else %}{% qs sort='name' page='' %}{% endif %}" data-sort="name" {% if cur == 'name' %}aria-sort="{{ desc|yesno:'descending,ascending' }}"{% endif %}>Nom</a>
+          </th>
+          <th scope="col" class="col-act">
+            <a href="{% if cur == 'act' and not desc %}{% qs sort='-act' page='' %}{% else %}{% qs sort='act' page='' %}{% endif %}" data-sort="act" {% if cur == 'act' %}aria-sort="{{ desc|yesno:'descending,ascending' }}"{% endif %}>Activités</a>
+          </th>
+          <th scope="col" class="col-pop">
+            <a href="{% if cur == 'pop' and desc %}{% qs sort='pop' page='' %}{% else %}{% qs sort='-pop' page='' %}{% endif %}" data-sort="pop" {% if cur == 'pop' %}aria-sort="{{ desc|yesno:'descending,ascending' }}"{% endif %} title="Vues Wikipédia (fr + en) sur 60 jours">Popularité</a>
+          </th>
+          <th scope="col" class="col-seen">
+            <a href="{% if cur == 'seen' and desc %}{% qs sort='seen' page='' %}{% else %}{% qs sort='-seen' page='' %}{% endif %}" data-sort="seen" {% if cur == 'seen' %}aria-sort="{{ desc|yesno:'descending,ascending' }}"{% endif %}>Rencontres</a>
+          </th>
+          {% endwith %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in celebrities %}
+          <tr data-id="{{ c.id }}">
+            <td class="col-name">
+              <a class="who" href="{{ c.get_absolute_url }}">
+                <span class="avatar">
+                  {% if c.avatar_url %}
+                    <img src="{{ c.avatar_url }}" alt="" loading="lazy" width="48" height="48">
+                  {% else %}
+                    <span class="initials">{{ c.initials }}</span>
+                  {% endif %}
+                </span>
+                <span class="who-name">{{ c.name }}</span>
+              </a>
+            </td>
+            <td class="col-act">
+              {% for a in c.activities.all %}<span class="act" {% if a.category %}title="{{ a.category.name }}"{% endif %}>{{ a.name }}</span>{% empty %}
+                <span class="muted">Non renseignée</span>
+              {% endfor %}
+            </td>
+            <td class="col-pop" data-pop>
+              {% if c.popularity_updated_at or c.popularity_score %}
+                <span class="pop-value" title="{{ c.views_fr }} vues fr, {{ c.views_en }} vues en">{{ c.popularity_score|views }}</span>
+                <span class="pop-bar"><span style="width: {{ c.popularity_score|popbar:max_pop }}%"></span></span>
+              {% else %}
+                <span class="muted" title="Pas encore calculée">–</span>
+              {% endif %}
+            </td>
+            <td class="col-seen">
+              <ul class="sightings">
+                {% for s in c.shown_sightings|slice:":3" %}
+                  <li>
+                    <span class="s-where">{{ s.location|default:"Lieu inconnu" }}</span><span class="s-when">{{ s.date_seen|date:"j F Y"|default:"date inconnue" }}</span>
+                    {% if s.notes %}<span class="s-notes">{{ s.notes|truncatechars:140 }}</span>{% endif %}
+                  </li>
+                {% empty %}
+                  <li class="muted">Aucune rencontre notée</li>
+                {% endfor %}
+              </ul>
+              {% if c.n_sightings > 3 %}
+                <a class="more" href="{{ c.get_absolute_url }}">et {{ c.n_sightings|add:"-3" }} autre{{ c.n_sightings|add:"-3"|pluralize }}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+
+{% if page.paginator.num_pages > 1 or result_count > 25 %}
+<nav class="pager" aria-label="Pagination">
+  <div class="pager-pages">
+    {% if page.has_previous %}
+      <a href="{% qs page=page.previous_page_number %}" data-page="{{ page.previous_page_number }}" rel="prev">Précédente</a>
+    {% endif %}
+    {% for n in page_range %}
+      {% if n == page.paginator.ELLIPSIS %}
+        <span class="gap">…</span>
+      {% elif n == page.number %}
+        <span aria-current="page">{{ n }}</span>
+      {% else %}
+        <a href="{% qs page=n %}" data-page="{{ n }}">{{ n }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page.has_next %}
+      <a href="{% qs page=page.next_page_number %}" data-page="{{ page.next_page_number }}" rel="next">Suivante</a>
+    {% endif %}
+  </div>
+  <label class="inline-select">
+    <select data-param="per" aria-label="Lignes par page">
+      {% for n in per_page_options %}<option value="{{ n }}" {% if p.per_page == n %}selected{% endif %}>{{ n }}</option>{% endfor %}
+    </select>
+    <span>par page</span>
+  </label>
+</nav>
+{% endif %}

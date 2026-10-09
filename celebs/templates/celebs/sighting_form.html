@@ -1,0 +1,31 @@
+{% extends "celebs/base.html" %}
+{% block title %}Modifier une rencontre{% endblock %}
+{% block page_class %}page-form{% endblock %}
+{% block content %}
+<a class="back" href="{{ sighting.celebrity.get_absolute_url }}">Retour à la fiche</a>
+<h1>Rencontre avec {{ sighting.celebrity.name }}</h1>
+<form method="post" class="editor">
+  {% csrf_token %}
+  <section class="editor-section">
+    <div class="form-grid">
+      <div class="field">
+        <label for="id_date_seen">Date</label>
+        {{ form.date_seen }}{{ form.date_seen.errors }}
+      </div>
+      <div class="field">
+        <label for="id_location">Lieu</label>
+        {{ form.location }}{{ form.location.errors }}
+        <datalist id="known-locations">{% for loc in locations %}<option value="{{ loc }}">{% endfor %}</datalist>
+      </div>
+      <div class="field field-wide">
+        <label for="id_notes">Notes</label>
+        {{ form.notes }}
+      </div>
+    </div>
+  </section>
+  <div class="editor-actions">
+    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+    <a class="btn btn-quiet" href="{{ sighting.celebrity.get_absolute_url }}">Annuler</a>
+  </div>
+</form>
+{% endblock %}
