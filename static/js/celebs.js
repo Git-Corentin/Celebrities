@@ -55,10 +55,44 @@
 
   if (filters && results) {
     let controller = null;
+    const F = filters.elements;
+    const fold = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
+    /* ── Retour arrière : on revient au même endroit de la page ── */
+    const SCROLL_KEY = "celebs:list-scroll";
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    const saveScroll = () => {
+      try { sessionStorage.setItem(SCROLL_KEY, JSON.stringify({ url: location.href, y: window.scrollY })); } catch (_) {}
+    };
+    const restoreScroll = () => {
+      let saved = null;
+      try { saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || "null"); } catch (_) {}
+      if (!saved || saved.url !== location.href) return;
+      const go = () => window.scrollTo(0, saved.y);
+      go();
+      requestAnimationFrame(go);
+      document.fonts?.ready.then(go);
+      window.addEventListener("load", go, { once: true });
+    };
+    window.addEventListener("scroll", debounce(saveScroll, 150), { passive: true });
+    window.addEventListener("pagehide", saveScroll);
+    const nav = performance.getEntriesByType?.("navigation")[0];
+    if (nav?.type === "back_forward" || nav?.type === "reload") restoreScroll();
+    window.addEventListener("pageshow", (e) => { if (e.persisted) restoreScroll(); });
+
+    /* ── Construction de l'URL ── */
     const formUrl = () => {
       const params = new URLSearchParams();
-      for (const [k, v] of new FormData(filters)) if (String(v).trim() !== "") params.append(k, v);
+      // Un secteur coché couvre déjà ses activités : inutile de les répéter dans l'URL
+      const sectors = new Set($$("input[data-cat]:checked", filters).map((i) => i.value));
+      for (const [k, v] of new FormData(filters)) {
+        if (String(v).trim() === "") continue;
+        if (k === "act") {
+          const input = filters.querySelector(`input[name=act][value="${CSS.escape(v)}"]`);
+          if (input && sectors.has(input.dataset.actCat)) continue;
+        }
+        params.append(k, v);
+      }
       if (params.get("sort") === "name") params.delete("sort");
       if (params.get("view") === "table") params.delete("view");
       if (params.get("per") === "50") params.delete("per");
@@ -68,9 +102,9 @@
 
     const syncHidden = (url) => {
       const params = new URL(url, location.href).searchParams;
-      filters.elements.sort.value = params.get("sort") || "name";
-      filters.elements.view.value = params.get("view") || "table";
-      filters.elements.per.value = params.get("per") || "50";
+      F.sort.value = params.get("sort") || "name";
+      F.view.value = params.get("view") || "table";
+      F.per.value = params.get("per") || "50";
     };
 
     const load = async (url, { scroll = false } = {}) => {
@@ -79,37 +113,52 @@
       results.classList.add("is-loading");
       try {
         const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, signal: controller.signal });
-        if (!res.ok) throw new Error(res.status);
+        if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         results.innerHTML = data.results;
         history.replaceState(null, "", url);
         syncHidden(url);
         updateFilterCount();
         if (scroll) results.closest(".results-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
+        saveScroll();
       } catch (err) {
-        if (err.name !== "AbortError") location.href = url; // repli : rechargement classique
+        if (err.name !== "AbortError") { console.error(err); location.href = url; }
       } finally {
         results.classList.remove("is-loading");
       }
     };
-
     const refresh = () => load(formUrl());
+
+    /* ── Secteurs ↔ activités ── */
+    const syncSectorFromActivities = (catId) => {
+      const sector = filters.querySelector(`input[data-cat="${catId}"]`);
+      const acts = $$(`input[data-act-cat="${catId}"]`, filters);
+      if (sector && acts.length) sector.checked = acts.every((a) => a.checked);
+    };
+
     filters.addEventListener("submit", (e) => { e.preventDefault(); refresh(); });
     filters.addEventListener("change", (e) => {
-      if (e.target.classList.contains("facet-find")) return;
+      const t = e.target;
+      if (t.classList.contains("facet-find") || t === F.q) return;
+      if (t.dataset.cat) {
+        // Cocher un secteur coche toutes ses activités (et inversement)
+        $$(`input[data-act-cat="${t.dataset.cat}"]`, filters).forEach((a) => { a.checked = t.checked; });
+      } else if (t.dataset.actCat) {
+        syncSectorFromActivities(t.dataset.actCat);
+      }
       refresh();
     });
-    filters.elements.q.addEventListener("input", debounce(refresh, 280));
-    filters.elements.loc.addEventListener("input", debounce(refresh, 400));
+    F.q.addEventListener("input", debounce(refresh, 300));
+    F.loc.addEventListener("input", debounce(refresh, 400));
 
-    // Petite recherche dans la liste (longue) des activités
+    /* ── Champ « Filtrer la liste » des activités ── */
     $$(".facet-find", filters).forEach((input) => {
       const box = $(input.dataset.find);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") e.preventDefault(); });
       input.addEventListener("input", () => {
-        const needle = input.value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+        const needle = fold(input.value.trim());
         $$(".chip", box).forEach((chip) => {
-          const name = (chip.dataset.name || "").normalize("NFD").replace(/[̀-ͯ]/g, "");
-          chip.hidden = needle && !name.includes(needle) && !$("input", chip).checked;
+          chip.hidden = !!needle && !fold(chip.dataset.name).includes(needle);
         });
         $$(".activity-group", box).forEach((g) => { g.hidden = !$$(".chip:not([hidden])", g).length; });
       });
@@ -123,21 +172,89 @@
 
     const updateFilterCount = () => {
       if (!toggle) return;
-      const f = filters.elements;
-      const n = [f.q.value, $$("input[name=cat]:checked", filters).length, $$("input[name=act]:checked", filters).length,
-        f.loc.value, f.from.value || f.to.value, f.year.value, f.nophoto.checked].filter(Boolean).length;
+      const n = [F.q.value, $$("input[name=cat]:checked", filters).length, $$("input[name=act]:checked", filters).length,
+        F.loc.value, F.from.value || F.to.value, F.year.value, F.nophoto.checked].filter(Boolean).length;
       toggle.innerHTML = "Filtres" + (n ? ` <span class="count-pill">${n}</span>` : "");
     };
 
     const resetAll = () => {
-      filters.reset();
       $$("input[type=text], input[type=search], input[type=date]", filters).forEach((i) => { i.value = ""; });
       $$("input[type=checkbox]", filters).forEach((i) => { i.checked = false; });
-      filters.elements.year.value = "";
+      F.year.value = "";
       $$(".chip, .activity-group", filters).forEach((c) => { c.hidden = false; });
       refresh();
     };
 
+    /* ── Suggestions de la barre de recherche ── */
+    const searchBox = $(".search", filters);
+    const searchList = $("#search-options");
+    let sItems = [];
+    let sActive = -1;
+    const closeSearch = () => { searchList.hidden = true; F.q.setAttribute("aria-expanded", "false"); sActive = -1; };
+    const KIND = { person: "Personne", activity: "Activité", sector: "Secteur" };
+    const renderSearch = () => {
+      if (!sItems.length) { closeSearch(); return; }
+      searchList.innerHTML = sItems.map((it, i) => {
+        const mark = it.type === "person"
+          ? (it.avatar ? `<span class="s-mark s-person"><img src="${esc(it.avatar)}" alt=""></span>`
+                       : `<span class="s-mark s-person">${esc(it.initials)}</span>`)
+          : `<span class="s-mark s-${it.type}" aria-hidden="true"></span>`;
+        return `<li role="option" data-i="${i}" aria-selected="${i === sActive}" class="s-row s-row-${it.type}">
+          ${mark}<span class="s-text"><span class="s-label">${esc(it.label)}</span>
+          <small class="s-kind">${KIND[it.type]}${it.meta ? ", " + esc(it.meta) : ""}</small></span></li>`;
+      }).join("");
+      searchList.hidden = false;
+      F.q.setAttribute("aria-expanded", "true");
+    };
+    const fetchSearch = debounce(async () => {
+      const q = F.q.value.trim();
+      if (!q) { sItems = []; closeSearch(); return; }
+      try {
+        const data = await fetch(`${searchBox.dataset.suggestUrl}?q=${encodeURIComponent(q)}`).then((r) => r.json());
+        if (F.q.value.trim() !== q) return;
+        sItems = data.items || [];
+        sActive = -1;
+        if (document.activeElement === F.q) renderSearch();
+      } catch (_) { closeSearch(); }
+    }, 120);
+    const pickSearch = (it) => {
+      closeSearch();
+      if (it.type === "person") { saveScroll(); location.href = it.url; return; }
+      F.q.value = "";
+      if (it.type === "activity") {
+        const input = filters.querySelector(`input[name=act][value="${it.id}"]`);
+        if (input) { input.checked = true; syncSectorFromActivities(input.dataset.actCat); }
+      } else {
+        const input = filters.querySelector(`input[data-cat="${it.id}"]`);
+        if (input) {
+          input.checked = true;
+          $$(`input[data-act-cat="${it.id}"]`, filters).forEach((a) => { a.checked = true; });
+        }
+      }
+      refresh();
+    };
+    F.q.addEventListener("input", fetchSearch);
+    F.q.addEventListener("focus", () => { if (F.q.value.trim()) fetchSearch(); });
+    F.q.addEventListener("blur", () => setTimeout(closeSearch, 150));
+    F.q.addEventListener("keydown", (e) => {
+      if (searchList.hidden) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        sActive = (sActive + (e.key === "ArrowDown" ? 1 : -1) + sItems.length) % sItems.length;
+        renderSearch();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (sActive >= 0) pickSearch(sItems[sActive]); else closeSearch();
+      } else if (e.key === "Escape") {
+        closeSearch();
+      }
+    });
+    searchList.addEventListener("mousedown", (e) => {
+      const li = e.target.closest("li[data-i]");
+      if (li) { e.preventDefault(); pickSearch(sItems[Number(li.dataset.i)]); }
+    });
+
+    /* ── Clics et menus dans la zone des résultats ── */
     document.addEventListener("click", (e) => {
       const reset = e.target.closest("[data-reset]");
       if (reset && (filters.contains(reset) || results.contains(reset))) { e.preventDefault(); resetAll(); return; }
@@ -146,13 +263,16 @@
       if (link && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         load(location.pathname + link.getAttribute("href"), { scroll: !!link.dataset.page });
+        return;
       }
+      // Lien vers une fiche : on mémorise la position pour le retour
+      if (e.target.closest("#results a[href]")) saveScroll();
     });
 
     results.addEventListener("change", (e) => {
       const param = e.target.dataset.param;
       if (!param) return;
-      filters.elements[param].value = e.target.value;
+      F[param].value = e.target.value;
       refresh();
     });
 
@@ -326,6 +446,9 @@
 
     /* Activités : étiquettes + autocomplétion au clavier */
     const hidden = $("#id_activities");
+    // Le JS remplace le champ texte par le sélecteur à étiquettes
+    $("#activity-picker").hidden = false;
+    $("#activities-raw").hidden = true;
     const tagList = $("#activity-tags");
     const search = $("#activity-search");
     const options = $("#activity-options");
@@ -334,7 +457,7 @@
     let active = -1;
 
     const renderTags = () => {
-      hidden.value = tags.join(",");
+      hidden.value = tags.join(", ");
       tagList.innerHTML = tags.map((t, i) =>
         `<li>${esc(t)}<button type="button" data-remove="${i}" aria-label="Retirer ${esc(t)}">×</button></li>`).join("");
     };

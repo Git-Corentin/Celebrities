@@ -24,12 +24,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-jyga5w4+kbo#$ykb2w3w2ne@lv^lp5(%+3v%se8#k%!r-j+r*q'
+# Sur PythonAnywhere, définissez DJANGO_SECRET_KEY dans le fichier WSGI
+# (os.environ["DJANGO_SECRET_KEY"] = "...") : la clé ne sera plus dans git.
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    'django-insecure-jyga5w4+kbo#$ykb2w3w2ne@lv^lp5(%+3v%se8#k%!r-j+r*q',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Par défaut on garde le comportement actuel (DEBUG=True). Pour la prod :
+# os.environ["DJANGO_DEBUG"] = "0" dans le WSGI (et configurer les fichiers
+# statiques / media dans l'onglet "Web" de PythonAnywhere).
+DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = ['nicodeme.pythonanywhere.com', '127.0.0.1', "localhost"]
+CSRF_TRUSTED_ORIGINS = ['https://nicodeme.pythonanywhere.com']
 
 
 # Application definition
@@ -110,6 +119,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Connexion (app celebs) : seules les personnes connectées peuvent modifier.
+LOGIN_URL = "celebs_login"
+LOGIN_REDIRECT_URL = "celebrity_list"
+LOGOUT_REDIRECT_URL = "celebrity_list"
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -121,7 +135,7 @@ LANGUAGES = [
 
 LANGUAGE_CODE = 'fr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Paris'
 
 USE_I18N = True
 
@@ -147,8 +161,21 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ─── App celebs ───────────────────────────────────────────────
+# User-Agent envoyé aux API Wikimedia (obligatoire selon leur politique).
+CELEBS_WIKI_USER_AGENT = os.environ.get(
+    "CELEBS_WIKI_USER_AGENT",
+    "CarnetCelebs/2.0 (https://nicodeme.pythonanywhere.com/celebs/)",
+)
+# Fichier JSON versionné dans git qui contient toutes les données celebs.
+CELEBS_EXPORT_FILE = BASE_DIR / "data" / "celebs.json"
+# Autoriser le bouton « Synchroniser vers git » (commit + push depuis le serveur).
+CELEBS_GIT_SYNC_ENABLED = os.environ.get("CELEBS_GIT_SYNC", "1") == "1"

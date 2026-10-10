@@ -599,3 +599,51 @@ a.act { color: var(--pen); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+
+/* ─────────────────────────── Correctifs v2.1 ─────────────────────────── */
+
+.tag-input[hidden], .activities-raw[hidden] { display: none; }
+
+/* Boutons des filtres toujours visibles en bas du panneau */
+.filters-actions {
+  position: sticky; bottom: 0; z-index: 2;
+  margin: 24px 0 0; padding: 12px 0 4px;
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 900px) {
+  .js .filters:not(.is-open) .filters-actions { display: none; }
+  .filters-actions { position: static; border-top: 0; }
+}
+
+/* Suggestions de la barre de recherche */
+.search { position: relative; }
+.s-row { align-items: center; justify-content: flex-start !important; gap: 10px !important; }
+.s-text { flex: 1; min-width: 0; display: grid; line-height: 1.25; }
+.s-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-kind { color: var(--muted); font-size: .75rem; }
+.s-mark {
+  flex: 0 0 26px; width: 26px; height: 26px; display: inline-grid; place-items: center;
+  border-radius: 50%; overflow: hidden; font-size: .6875rem; font-weight: 700;
+}
+.s-person { background: var(--pen-wash); color: var(--pen); }
+.s-person img { width: 100%; height: 100%; object-fit: cover; }
+/* activité : une pastille surligneur ; secteur : un cadre qui regroupe */
+.s-activity::before { content: ""; width: 14px; height: 9px; border-radius: 2px; background: var(--marker); transform: skewX(-12deg); }
+.s-sector::before { content: ""; width: 13px; height: 13px; border-radius: 3px; border: 2px solid var(--ink-2); }
+.s-row-activity .s-kind, .s-row-sector .s-kind { color: var(--ink-2); }
+
+/* Le titre rejoint la colonne de droite : le panneau de filtres démarre en haut
+   de page et tient entièrement à l'écran, boutons compris. */
+.list-layout {
+  grid-template-areas: "filters head" "filters results";
+  grid-template-rows: auto 1fr;
+  row-gap: 20px;
+}
+.list-layout > .list-head { grid-area: head; margin-bottom: 0; }
+.list-layout > .filters { grid-area: filters; }
+.list-layout > .results-wrap { grid-area: results; }
+@media (max-width: 900px) {
+  .list-layout { grid-template-areas: "head" "filters" "results"; }
+}

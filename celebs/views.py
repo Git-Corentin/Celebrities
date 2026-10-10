@@ -32,7 +32,7 @@ def _known_locations():
 def celebrity_list(request):
     p = filters.ListParams.from_request(request)
     ids = filters.ordered_ids(p)
-    paginator = Paginator(ids, p.per_page)
+    paginator = Paginator(ids, p.per_page or max(len(ids), 1))
     page = paginator.get_page(p.page)
     celebrities = filters.load_page(list(page.object_list), p)
     max_pop = Celebrity.objects.aggregate(m=Max("popularity_score"))["m"] or 0
@@ -307,6 +307,53 @@ def set_activity_category(request, activity_id):
 
 
 # ───────────────────────────── API JSON ─────────────────────────────
+
+@require_GET
+def suggest(request):
+    """Suggestions de la barre de recherche : personnes, activités et secteurs."""
+    key = normalize(request.GET.get("q", ""))
+    if not key:
+        return JsonResponse({"items": []})
+
+    def rank(text):
+        t = normalize(text)
+        if t.startswith(key):
+            return 0
+        if any(w.startswith(key) for w in t.split()):
+            return 1
+        return 2 if key in t else None
+
+    people = []
+    for c in Celebrity.objects.filter(name_key__contains=key).only("id", "name", "image", "thumbnail")[:200]:
+        people.append((rank(c.name), c.name_key, c))
+    people.sort(key=lambda r: (r[0], r[1]))
+    acts = []
+    for a in Activity.objects.select_related("category").annotate(n=Count("celebrities")):
+        r = rank(a.name)
+        if r is not None:
+            acts.append((r, -a.n, a))
+    acts.sort(key=lambda r: (r[0], r[1]))
+    cats = [(rank(c.name), c) for c in Category.objects.all() if rank(c.name) is not None]
+
+    # On ne garde que les débuts de mots ; « au milieu d'un mot » seulement s'il n'y a rien d'autre.
+    if any(r[0] < 2 for r in people + acts + cats):
+        people = [r for r in people if r[0] < 2]
+        acts = [r for r in acts if r[0] < 2]
+        cats = [r for r in cats if r[0] < 2]
+    cats = [c for _, c in cats]
+
+    items = [
+        {"type": "person", "label": c.name, "url": c.get_absolute_url(), "avatar": c.avatar_url, "initials": c.initials}
+        for _, _, c in people[:6]
+    ] + [
+        {"type": "activity", "label": a.name, "id": a.pk, "meta": f"{a.n} personne{'s' if a.n > 1 else ''}",
+         "category": a.category_id}
+        for _, _, a in acts[:5]
+    ] + [
+        {"type": "sector", "label": c.name, "id": c.pk} for c in cats[:3]
+    ]
+    return JsonResponse({"items": items})
+
 
 @require_GET
 def search_activities(request):

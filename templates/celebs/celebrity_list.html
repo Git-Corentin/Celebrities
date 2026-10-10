@@ -1,0 +1,142 @@
+{% extends "celebs/base.html" %}
+{% load celebs_tags %}
+
+{% block title %}Célébrités croisées{% endblock %}
+{% block page_class %}page-list{% endblock %}
+
+{% block content %}
+<div class="list-layout">
+<div class="list-head">
+  <div>
+    <h1>Célébrités croisées</h1>
+    <p class="lede">
+      {{ stats.celebs }} personne{{ stats.celebs|pluralize }}, {{ stats.sightings }} rencontre{{ stats.sightings|pluralize }}
+      dans {{ stats.places }} lieu{{ stats.places|pluralize:"x" }}.
+    </p>
+  </div>
+  {% if user.is_authenticated %}
+    <a class="btn btn-primary" href="{% url 'add_celebrity' %}">Nouvelle rencontre</a>
+  {% endif %}
+</div>
+
+  <form id="filters" class="filters" method="get" action="" role="search">
+    <input type="hidden" name="sort" value="{{ p.sort_param }}">
+    <input type="hidden" name="view" value="{{ p.view }}">
+    <input type="hidden" name="per" value="{{ p.per_page }}">
+
+    <div class="filters-top">
+      <div class="search" data-suggest-url="{% url 'suggest' %}">
+        <label class="visually-hidden" for="q">Rechercher</label>
+        <input type="search" name="q" id="q" value="{{ p.q }}" placeholder="Nom, activité ou secteur" autocomplete="off"
+               role="combobox" aria-expanded="false" aria-controls="search-options" aria-autocomplete="list">
+        <ul class="options search-options" id="search-options" role="listbox" hidden></ul>
+      </div>
+      <button type="button" class="btn btn-quiet filters-toggle" aria-expanded="false" aria-controls="filters-body">
+        Filtres{% if p.active_count %} <span class="count-pill">{{ p.active_count }}</span>{% endif %}
+      </button>
+    </div>
+
+    <div class="filters-body" id="filters-body">
+      <fieldset class="facet">
+        <legend>Secteur</legend>
+        <div class="chips">
+          {% for cat in categories %}
+            <label class="chip">
+              <input type="checkbox" name="cat" value="{{ cat.id }}" data-cat="{{ cat.id }}" {% if cat.id|in_list:p.categories %}checked{% endif %}>
+              <span>{{ cat.name }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <fieldset class="facet">
+        <legend>Activité</legend>
+        <input type="text" class="facet-find" placeholder="Filtrer la liste" data-find="#activity-chips" aria-label="Filtrer les activités">
+        <div class="activity-groups" id="activity-chips">
+          {% for cat in categories %}
+            {% if cat.activity_set.all %}
+              <div class="activity-group">
+                <p class="activity-group-name">{{ cat.name }}</p>
+                <div class="chips">
+                  {% for act in cat.activity_set.all %}
+                    <label class="chip" data-name="{{ act.name|lower }}">
+                      <input type="checkbox" name="act" value="{{ act.id }}" data-act-cat="{{ cat.id }}" {% if act.id|in_list:p.activities or cat.id|in_list:p.categories %}checked{% endif %}>
+                      <span>{{ act.name }}<small>{{ act.n }}</small></span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+          {% if orphan_activities %}
+            <div class="activity-group">
+              <p class="activity-group-name">Sans secteur</p>
+              <div class="chips">
+                {% for act in orphan_activities %}
+                  <label class="chip" data-name="{{ act.name|lower }}">
+                    <input type="checkbox" name="act" value="{{ act.id }}" {% if act.id|in_list:p.activities %}checked{% endif %}>
+                    <span>{{ act.name }}<small>{{ act.n }}</small></span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </fieldset>
+
+      <fieldset class="facet">
+        <legend>Lieu</legend>
+        <input type="text" name="loc" value="{{ p.location }}" list="known-locations" placeholder="Paris, Cannes, Roland-Garros…">
+        <datalist id="known-locations">
+          {% for loc in locations %}<option value="{{ loc }}">{% endfor %}
+        </datalist>
+      </fieldset>
+
+      <fieldset class="facet">
+        <legend>Période</legend>
+        <select name="year" aria-label="Année">
+          <option value="">Toutes les années</option>
+          {% for y in years %}
+            <option value="{{ y }}" {% if p.year == y %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <div class="date-range">
+          <label>Du <input type="date" name="from" value="{{ p.date_from|date:'Y-m-d' }}"></label>
+          <label>au <input type="date" name="to" value="{{ p.date_to|date:'Y-m-d' }}"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="facet">
+        <legend class="visually-hidden">Autres</legend>
+        <label class="check">
+          <input type="checkbox" name="nophoto" value="1" {% if p.no_photo %}checked{% endif %}>
+          Seulement les fiches sans photo
+        </label>
+      </fieldset>
+
+
+    </div>
+    <div class="filters-actions" id="filters-actions">
+        <button type="submit" class="btn btn-primary js-hide">Appliquer</button>
+        <a class="btn btn-quiet" href="{% url 'celebrity_list' %}" data-reset>Tout effacer</a>
+    </div>
+  </form>
+
+  <section class="results-wrap" aria-live="polite">
+    <div id="results">
+      {% include "celebs/partials/results.html" %}
+    </div>
+  </section>
+</div>
+
+{% if user.is_authenticated %}
+<div class="popularity-runner" id="pop-runner" hidden>
+  <div class="pop-runner-text">
+    <strong>Mise à jour de la popularité</strong>
+    <span><span data-done>0</span> sur <span data-total>0</span>, <span data-errors>0</span> erreur(s)</span>
+  </div>
+  <div class="meter"><div class="meter-fill" data-fill></div></div>
+  <button type="button" class="btn btn-quiet" data-stop>Arrêter</button>
+</div>
+{% endif %}
+{% endblock %}

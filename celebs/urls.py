@@ -22,6 +22,7 @@ urlpatterns = [
     path('activities/<int:activity_id>/category/', views.set_activity_category, name='set_activity_category'),
 
     path('check-celebrity/', views.check_celebrity_exists, name='check_celebrity_exists'),
+    path('api/suggest/', views.suggest, name='suggest'),
     path('api/image-suggestions/', views.image_suggestions, name='image_suggestions'),
     path('api/popularity/batch/', views.update_popularity_batch, name='update_popularity_batch'),
     path('api/all-celeb-ids/', views.all_celeb_ids, name='all_celeb_ids'),

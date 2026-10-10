@@ -42,7 +42,9 @@ def save_activities(celeb, names):
 
 
 class CelebrityForm(forms.ModelForm):
-    activities = ActivitiesField(required=False, widget=forms.HiddenInput)
+    # Champ texte visible (« Acteur, Humoriste ») : le JS le transforme en étiquettes ;
+    # sans JS il reste utilisable et n'efface jamais les activités par erreur.
+    activities = ActivitiesField(required=False, widget=forms.TextInput(attrs={"autocomplete": "off"}))
     image = forms.ImageField(required=False, widget=forms.FileInput(attrs={"accept": "image/*"}))
     image_url = forms.URLField(required=False, widget=forms.HiddenInput, assume_scheme="https")
     remove_image = forms.BooleanField(required=False, label="Supprimer la photo")

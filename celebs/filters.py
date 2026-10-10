@@ -27,7 +27,7 @@ SORT_OPTIONS = [
     ("act", "Activité"),
     ("-added", "Ajout le plus récent"),
 ]
-PER_PAGE = [25, 50, 100, 200, 500]
+PER_PAGE = [25, 50, 100, 200, 0]  # 0 = tout afficher
 
 
 def _ints(values):
@@ -135,10 +135,10 @@ def ordered_ids(p):
         needle = normalize(p.q)
         act_ids = [a.pk for a in Activity.objects.only("id", "name") if needle in normalize(a.name)]
         qs = qs.filter(Q(name_key__contains=needle) | Q(activities__in=act_ids))
-    if p.categories:
-        qs = qs.filter(activities__category__in=p.categories)
-    if p.activities:
-        qs = qs.filter(activities__in=p.activities)
+    # Secteurs et activités se cumulent (OU) : cocher « Danse » et « Directeur
+    # d'entreprise » montre les danseurs ET les directeurs, comme avant.
+    if p.categories or p.activities:
+        qs = qs.filter(Q(activities__category__in=p.categories) | Q(activities__in=p.activities))
     if p.sighting_filtered:
         qs = qs.filter(pk__in=sightings_queryset(p).values("celebrity_id"))
     if p.no_photo:
